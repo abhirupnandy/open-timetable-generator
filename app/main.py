@@ -1,12 +1,12 @@
 from fastapi import FastAPI
 
-app = FastAPI(
-    title="Open Timetable Generator",
-    description="API for institutional timetable generation and optimisation.",
-    version="0.1.0",
-)
+from app.api.router import router
+from app.core.config import settings
+
+app = FastAPI(title=settings.app_name, version=settings.app_version, debug=settings.debug)
+app.include_router(router)
 
 
-@app.get("/health")
+@app.get("/health", tags=["Health"])
 def health() -> dict[str, str]:
     return {"status": "ok"}

@@ -1,39 +1,40 @@
 [project]
 name = "open-timetable-generator"
 version = "0.1.0"
-description = "Add your description here"
+description = "API and database foundation for an institutional timetable generation system"
 readme = "README.md"
-authors = [
-    { name = "Abhirup Nandy", email = "abhirupnandy.rocks@gmail.com" }
-]
-requires-python = ">=3.14"
+requires-python = ">=3.14,<3.15"
 dependencies = [
-    "aiosqlite>=0.22.1",
-    "alembic>=1.20.0",
-    "fastapi>=0.142.2",
-    "numpy>=2.5.3",
-    "openpyxl>=3.1.5",
-    "ortools>=9.15.6755",
-    "pydantic>=2.13.5",
-    "pydantic-settings>=2.15.0",
-    "rich>=15.0.0",
-    "scipy>=1.18.1",
-    "sqlalchemy>=2.1.1",
-    "typer>=0.27.2",
-    "uvicorn[standard]>=0.54.0",
+    "alembic>=1.16,<2.0",
+    "email-validator>=2.0,<3.0",
+    "fastapi>=0.116,<1.0",
+    "pydantic>=2.0,<3.0",
+    "pydantic-settings>=2.0,<3.0",
+    "sqlalchemy>=2.0,<3.0",
+    "uvicorn[standard]>=0.35,<1.0",
 ]
-
-[project.scripts]
-open-timetable-generator = "open_timetable_generator:main"
-
-[build-system]
-requires = ["uv_build>=0.12.20,<0.13.0"]
-build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
-    "httpx>=0.28.1",
-    "pytest>=9.1.1",
-    "pytest-asyncio>=1.4.0",
-    "ruff>=0.16.10",
+    "aiosqlite>=0.21,<1.0",
+    "httpx>=0.28,<1.0",
+    "pytest>=8.0,<9.0",
+    "pytest-asyncio>=1.0,<2.0",
+    "ruff>=0.12,<1.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = [
+    "fastapi.Depends",
 ]
