@@ -173,3 +173,135 @@ def test_patch_validation_and_delete_behaviour(client):
     )
     # Referenced schools cannot be deleted silently.
     assert client.delete(f"/api/v1/schools/{school['id']}").status_code == 409
+
+
+def test_group_parent_must_belong_to_same_course(client):
+    school = client.post(
+        "/api/v1/schools",
+        json={"code": "S01", "name": "School One"},
+    ).json()
+
+    course1 = client.post(
+        "/api/v1/courses",
+        json={
+            "code": "C01",
+            "name": "Course One",
+            "school_id": school["id"],
+            "duration_years": 4,
+            "total_semesters": 8,
+        },
+    ).json()
+
+    course2 = client.post(
+        "/api/v1/courses",
+        json={
+            "code": "C02",
+            "name": "Course Two",
+            "school_id": school["id"],
+            "duration_years": 4,
+            "total_semesters": 8,
+        },
+    ).json()
+
+    parent = client.post(
+        "/api/v1/groups",
+        json={
+            "code": "G1",
+            "name": "Course One Group",
+            "group_type": "GROUP",
+            "course_id": course1["id"],
+            "capacity": 60,
+        },
+    ).json()
+
+    response = client.post(
+        "/api/v1/groups",
+        json={
+            "code": "G2",
+            "name": "Invalid Child Group",
+            "group_type": "BATCH",
+            "course_id": course2["id"],
+            "parent_group_id": parent["id"],
+            "capacity": 30,
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "Parent group must belong to the same course"
+
+
+
+def test_assignment_group_must_belong_to_same_course(client):
+    school = client.post(
+        "/api/v1/schools",
+        json={"code": "S01", "name": "School One"},
+    ).json()
+
+    course1 = client.post(
+        "/api/v1/courses",
+        json={
+            "code": "C01",
+            "name": "Course One",
+            "school_id": school["id"],
+            "duration_years": 4,
+            "total_semesters": 8,
+        },
+    ).json()
+
+    course2 = client.post(
+        "/api/v1/courses",
+        json={
+            "code": "C02",
+            "name": "Course Two",
+            "school_id": school["id"],
+            "duration_years": 4,
+            "total_semesters": 8,
+        },
+    ).json()
+
+    faculty = client.post(
+        "/api/v1/faculty",
+        json={
+            "employee_id": "F001",
+            "name": "Faculty One",
+            "email": "faculty@example.com",
+            "designation": "ASSISTANT_PROFESSOR",
+            "school_id": school["id"],
+        },
+    ).json()
+
+    subject = client.post(
+        "/api/v1/subjects",
+        json={
+            "code": "SUB01",
+            "name": "Data Structures",
+            "subject_type": "LECTURE",
+        },
+    ).json()
+
+    group = client.post(
+        "/api/v1/groups",
+        json={
+            "code": "G1",
+            "name": "Course One Group",
+            "group_type": "GROUP",
+            "course_id": course1["id"],
+            "capacity": 60,
+        },
+    ).json()
+
+    response = client.post(
+        "/api/v1/assignments",
+        json={
+            "subject_id": subject["id"],
+            "course_id": course2["id"],
+            "academic_group_id": group["id"],
+            "faculty_id": faculty["id"],
+            "sessions_per_week": 3,
+            "duration_periods": 1,
+            "mode": "IN_PERSON",
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "Academic group must belong to the same course"
