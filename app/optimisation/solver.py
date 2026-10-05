@@ -4,10 +4,15 @@ from dataclasses import dataclass
 
 from ortools.sat.python import cp_model
 
-from app.domain.candidate_domains import build_candidate_domains
 from app.domain.placement import SessionPlacement
 from app.domain.problem import SchedulingProblem
+from app.domain.room_assignment import RoomAssignment
 from app.domain.schedule import Timetable
+from app.domain.scheduling_candidate import SchedulingCandidate
+from app.domain.scheduling_candidate_domains import (
+    build_scheduling_candidate_domains,
+)
+from app.optimisation.objectives import build_student_group_gap_objective
 
 
 @dataclass(frozen=True)
@@ -34,11 +39,11 @@ def _placements_overlap(
 
 def _add_pairwise_candidate_conflict_constraints(
     model: cp_model.CpModel,
-    candidate_domains: dict[str, tuple[SessionPlacement, ...]],
+    candidate_domains: dict[str, tuple[SchedulingCandidate, ...]],
     candidate_variables: dict[str, list[cp_model.IntVar]],
     conflicts,
 ) -> None:
-    """Prevent incompatible candidate placements from being selected together."""
+    """Prevent incompatible scheduling candidates from being selected together."""
 
     session_items = list(candidate_domains.items())
 
@@ -60,18 +65,22 @@ def _add_pairwise_candidate_conflict_constraints(
 
 def _add_faculty_constraints(
     model: cp_model.CpModel,
-    candidate_domains: dict[str, tuple[SessionPlacement, ...]],
+    candidate_domains: dict[str, tuple[SchedulingCandidate, ...]],
     candidate_variables: dict[str, list[cp_model.IntVar]],
 ) -> None:
     """Prevent overlapping sessions assigned to the same faculty member."""
 
     def conflicts(
-        first: SessionPlacement,
-        second: SessionPlacement,
+        first: SchedulingCandidate,
+        second: SchedulingCandidate,
     ) -> bool:
         return (
-            first.session.faculty_id == second.session.faculty_id
-            and _placements_overlap(first, second)
+            first.placement.session.faculty_id
+            == second.placement.session.faculty_id
+            and _placements_overlap(
+                first.placement,
+                second.placement,
+            )
         )
 
     _add_pairwise_candidate_conflict_constraints(
@@ -84,18 +93,52 @@ def _add_faculty_constraints(
 
 def _add_academic_group_constraints(
     model: cp_model.CpModel,
-    candidate_domains: dict[str, tuple[SessionPlacement, ...]],
+    candidate_domains: dict[str, tuple[SchedulingCandidate, ...]],
     candidate_variables: dict[str, list[cp_model.IntVar]],
 ) -> None:
     """Prevent overlapping sessions assigned to the same academic group."""
 
     def conflicts(
-        first: SessionPlacement,
-        second: SessionPlacement,
+        first: SchedulingCandidate,
+        second: SchedulingCandidate,
     ) -> bool:
         return (
-            first.session.academic_group_id == second.session.academic_group_id
-            and _placements_overlap(first, second)
+            first.placement.session.academic_group_id
+            == second.placement.session.academic_group_id
+            and _placements_overlap(
+                first.placement,
+                second.placement,
+            )
+        )
+
+    _add_pairwise_candidate_conflict_constraints(
+        model,
+        candidate_domains,
+        candidate_variables,
+        conflicts,
+    )
+
+
+def _add_room_constraints(
+    model: cp_model.CpModel,
+    candidate_domains: dict[str, tuple[SchedulingCandidate, ...]],
+    candidate_variables: dict[str, list[cp_model.IntVar]],
+) -> None:
+    """Prevent overlapping sessions from using the same physical room."""
+
+    def conflicts(
+        first: SchedulingCandidate,
+        second: SchedulingCandidate,
+    ) -> bool:
+        if first.room is None or second.room is None:
+            return False
+
+        return (
+            first.room.id == second.room.id
+            and _placements_overlap(
+                first.placement,
+                second.placement,
+            )
         )
 
     _add_pairwise_candidate_conflict_constraints(
@@ -107,9 +150,9 @@ def _add_academic_group_constraints(
 
 
 def solve(problem: SchedulingProblem) -> SolverResult:
-    """Solve the minimal session-placement problem using CP-SAT."""
+    """Solve the hard-constraint session-placement-and-room problem using CP-SAT."""
 
-    candidate_domains = build_candidate_domains(problem)
+    candidate_domains = build_scheduling_candidate_domains(problem)
 
     model = cp_model.CpModel()
 
@@ -139,6 +182,22 @@ def solve(problem: SchedulingProblem) -> SolverResult:
         candidate_variables,
     )
 
+    _add_room_constraints(
+        model,
+        candidate_domains,
+        candidate_variables,
+    )
+
+    objective = build_student_group_gap_objective(
+        model,
+        candidate_domains,
+        candidate_variables,
+        days=problem.timetable_input.days,
+        periods_per_day=problem.timetable_input.periods_per_day,
+    )
+
+    model.minimize(objective)
+
     solver = cp_model.CpSolver()
     status = solver.solve(model)
 
@@ -148,7 +207,7 @@ def solve(problem: SchedulingProblem) -> SolverResult:
     ):
         raise RuntimeError("CP-SAT could not find a timetable")
 
-    placements: list[SessionPlacement] = []
+    selected_candidates: list[SchedulingCandidate] = []
 
     for session_id, candidates in candidate_domains.items():
         variables = candidate_variables[session_id]
@@ -159,10 +218,25 @@ def solve(problem: SchedulingProblem) -> SolverResult:
             if solver.value(variable) == 1
         )
 
-        placements.append(candidates[selected_index])
+        selected_candidates.append(candidates[selected_index])
+
+    placements = tuple(
+        candidate.placement
+        for candidate in selected_candidates
+    )
+
+    room_assignments = tuple(
+        RoomAssignment(
+            placement=candidate.placement,
+            room=candidate.room,
+        )
+        for candidate in selected_candidates
+        if candidate.room is not None
+    )
 
     return SolverResult(
         timetable=Timetable(
-            placements=tuple(placements),
+            placements=placements,
+            room_assignments=room_assignments,
         ),
     )
