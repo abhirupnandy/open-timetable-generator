@@ -33,6 +33,7 @@ class TimetableInput:
     periods_per_day: int
     sessions: tuple[SchedulingSession, ...]
     academic_group_capacities: dict[int, int] | None = None
+    academic_group_parent_ids: dict[int, int | None] | None = None
     faculty_availability: dict[int, ResourceAvailability] | None = None
     room_availability: dict[int, ResourceAvailability] | None = None
     rooms: tuple[SchedulingRoom, ...] | None = None

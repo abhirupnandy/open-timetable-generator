@@ -1,0 +1,174 @@
+Session ID,Day,Start Period,End Period,Duration,Subject,Course Code,Course Name,Academic Group Code,Academic Group Name,Faculty,Room
+assignment:1:session:1,TUESDAY,5,5,1,Calculus and Linear Algebra,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y1-G1,B.Tech Artificial Intelligence Year 1 Group 1,Dr. Ananya Sen,CR203
+assignment:1:session:2,FRIDAY,4,4,1,Calculus and Linear Algebra,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y1-G1,B.Tech Artificial Intelligence Year 1 Group 1,Dr. Ananya Sen,CR202
+assignment:1:session:3,WEDNESDAY,3,3,1,Calculus and Linear Algebra,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y1-G1,B.Tech Artificial Intelligence Year 1 Group 1,Dr. Ananya Sen,CR204
+assignment:2:session:1,TUESDAY,6,6,1,Programming Fundamentals,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y1-G1,B.Tech Artificial Intelligence Year 1 Group 1,Dr. Rahul Mehta,CR201
+assignment:2:session:2,TUESDAY,7,7,1,Programming Fundamentals,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y1-G1,B.Tech Artificial Intelligence Year 1 Group 1,Dr. Rahul Mehta,CR203
+assignment:2:session:3,WEDNESDAY,4,4,1,Programming Fundamentals,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y1-G1,B.Tech Artificial Intelligence Year 1 Group 1,Dr. Rahul Mehta,CR201
+assignment:3:session:1,TUESDAY,8,8,1,Digital Electronics,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y1-G1,B.Tech Artificial Intelligence Year 1 Group 1,Dr. Priya Nair,CR202
+assignment:3:session:2,THURSDAY,7,7,1,Digital Electronics,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y1-G1,B.Tech Artificial Intelligence Year 1 Group 1,Dr. Priya Nair,CR201
+assignment:3:session:3,FRIDAY,3,3,1,Digital Electronics,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y1-G1,B.Tech Artificial Intelligence Year 1 Group 1,Dr. Priya Nair,CR201
+assignment:4:session:1,MONDAY,5,6,2,Programming Fundamentals Laboratory,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y1-G1-B1,B.Tech Artificial Intelligence Year 1 Group 1 Batch 1,Aditya Sharma,LAB302
+assignment:5:session:1,THURSDAY,1,2,2,Programming Fundamentals Laboratory,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y1-G1-B2,B.Tech Artificial Intelligence Year 1 Group 1 Batch 2,Ishita Banerjee,LAB301
+assignment:6:session:1,TUESDAY,2,2,1,Data Structures,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y2-G1,B.Tech Artificial Intelligence Year 2 Group 1,Dr. Arjun Das,CR203
+assignment:6:session:2,THURSDAY,4,4,1,Data Structures,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y2-G1,B.Tech Artificial Intelligence Year 2 Group 1,Dr. Arjun Das,CR202
+assignment:6:session:3,THURSDAY,3,3,1,Data Structures,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y2-G1,B.Tech Artificial Intelligence Year 2 Group 1,Dr. Arjun Das,CR203
+assignment:7:session:1,FRIDAY,4,4,1,Computer Organization,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y2-G1,B.Tech Artificial Intelligence Year 2 Group 1,Dr. Sneha Roy,CR203
+assignment:7:session:2,MONDAY,4,4,1,Computer Organization,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y2-G1,B.Tech Artificial Intelligence Year 2 Group 1,Dr. Sneha Roy,CR204
+assignment:7:session:3,WEDNESDAY,3,3,1,Computer Organization,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y2-G1,B.Tech Artificial Intelligence Year 2 Group 1,Dr. Sneha Roy,CR203
+assignment:8:session:1,WEDNESDAY,4,4,1,Probability and Statistics,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y2-G1,B.Tech Artificial Intelligence Year 2 Group 1,Dr. Vikram Bose,CR204
+assignment:8:session:2,WEDNESDAY,6,6,1,Probability and Statistics,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y2-G1,B.Tech Artificial Intelligence Year 2 Group 1,Dr. Vikram Bose,CR203
+assignment:8:session:3,WEDNESDAY,5,5,1,Probability and Statistics,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y2-G1,B.Tech Artificial Intelligence Year 2 Group 1,Dr. Vikram Bose,CR204
+assignment:9:session:1,WEDNESDAY,7,8,2,Data Structures Laboratory,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y2-G1-B1,B.Tech Artificial Intelligence Year 2 Group 1 Batch 1,Nikhil Verma,LAB301
+assignment:10:session:1,THURSDAY,1,2,2,Data Structures Laboratory,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y2-G1-B2,B.Tech Artificial Intelligence Year 2 Group 1 Batch 2,Pooja Mukherjee,LAB302
+assignment:11:session:1,TUESDAY,8,8,1,Machine Learning,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y3-G1,B.Tech Artificial Intelligence Year 3 Group 1,Dr. Neha Kapoor,CR201
+assignment:11:session:2,WEDNESDAY,3,3,1,Machine Learning,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y3-G1,B.Tech Artificial Intelligence Year 3 Group 1,Dr. Neha Kapoor,CR201
+assignment:11:session:3,FRIDAY,3,3,1,Machine Learning,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y3-G1,B.Tech Artificial Intelligence Year 3 Group 1,Dr. Neha Kapoor,CR203
+assignment:12:session:1,MONDAY,3,3,1,Data Management and AI Integration,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y3-G1,B.Tech Artificial Intelligence Year 3 Group 1,Dr. Rohan Gupta,CR202
+assignment:12:session:2,WEDNESDAY,4,4,1,Data Management and AI Integration,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y3-G1,B.Tech Artificial Intelligence Year 3 Group 1,Dr. Rohan Gupta,CR203
+assignment:12:session:3,FRIDAY,2,2,1,Data Management and AI Integration,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y3-G1,B.Tech Artificial Intelligence Year 3 Group 1,Dr. Rohan Gupta,CR201
+assignment:13:session:1,WEDNESDAY,5,5,1,Numerical Methods and Optimization Techniques,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y3-G1,B.Tech Artificial Intelligence Year 3 Group 1,Dr. Meera Iyer,ONLINE
+assignment:13:session:2,THURSDAY,3,3,1,Numerical Methods and Optimization Techniques,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y3-G1,B.Tech Artificial Intelligence Year 3 Group 1,Dr. Meera Iyer,ONLINE
+assignment:14:session:1,FRIDAY,5,6,2,Machine Learning Laboratory,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y3-G1-B1,B.Tech Artificial Intelligence Year 3 Group 1 Batch 1,Sourav Das,LAB303
+assignment:15:session:1,TUESDAY,1,2,2,Machine Learning Laboratory,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y3-G1-B2,B.Tech Artificial Intelligence Year 3 Group 1 Batch 2,Riya Singh,LAB304
+assignment:16:session:1,THURSDAY,5,5,1,Generative AI,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y4-G1,B.Tech Artificial Intelligence Year 4 Group 1,Dr. Karan Malhotra,LH101
+assignment:16:session:2,TUESDAY,4,4,1,Generative AI,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y4-G1,B.Tech Artificial Intelligence Year 4 Group 1,Dr. Karan Malhotra,LH104
+assignment:16:session:3,THURSDAY,3,3,1,Generative AI,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y4-G1,B.Tech Artificial Intelligence Year 4 Group 1,Dr. Karan Malhotra,LH102
+assignment:17:session:1,TUESDAY,5,5,1,Computer Vision,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y4-G1,B.Tech Artificial Intelligence Year 4 Group 1,Dr. Ishita Verma,LH103
+assignment:17:session:2,THURSDAY,4,4,1,Computer Vision,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y4-G1,B.Tech Artificial Intelligence Year 4 Group 1,Dr. Ishita Verma,LH102
+assignment:17:session:3,WEDNESDAY,4,4,1,Computer Vision,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y4-G1,B.Tech Artificial Intelligence Year 4 Group 1,Dr. Ishita Verma,LH103
+assignment:18:session:1,WEDNESDAY,5,5,1,Agentic AI,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y4-G1,B.Tech Artificial Intelligence Year 4 Group 1,Dr. Nikhil Singh,ONLINE
+assignment:18:session:2,WEDNESDAY,3,3,1,Agentic AI,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y4-G1,B.Tech Artificial Intelligence Year 4 Group 1,Dr. Nikhil Singh,ONLINE
+assignment:18:session:3,MONDAY,3,3,1,Agentic AI,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y4-G1,B.Tech Artificial Intelligence Year 4 Group 1,Dr. Nikhil Singh,ONLINE
+assignment:19:session:1,FRIDAY,5,6,2,Artificial Intelligence Laboratory,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y4-G1-B1,B.Tech Artificial Intelligence Year 4 Group 1 Batch 1,Aman Gupta,LAB301
+assignment:20:session:1,TUESDAY,1,2,2,Artificial Intelligence Laboratory,BTECH-AI,B.Tech Artificial Intelligence,BTECH-AI-Y4-G1-B2,B.Tech Artificial Intelligence Year 4 Group 1 Batch 2,Tanvi Mehta,LAB303
+assignment:21:session:1,WEDNESDAY,4,4,1,Mathematics for Computing,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y1-G1,B.Sc Artificial Intelligence Year 1 Group 1,Dr. Pooja Das,CR202
+assignment:21:session:2,FRIDAY,3,3,1,Mathematics for Computing,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y1-G1,B.Sc Artificial Intelligence Year 1 Group 1,Dr. Pooja Das,CR207
+assignment:21:session:3,TUESDAY,5,5,1,Mathematics for Computing,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y1-G1,B.Sc Artificial Intelligence Year 1 Group 1,Dr. Pooja Das,CR204
+assignment:22:session:1,WEDNESDAY,3,3,1,Programming in C,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y1-G1,B.Sc Artificial Intelligence Year 1 Group 1,Dr. Sourav Roy,CR205
+assignment:22:session:2,THURSDAY,5,5,1,Programming in C,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y1-G1,B.Sc Artificial Intelligence Year 1 Group 1,Dr. Sourav Roy,CR206
+assignment:22:session:3,WEDNESDAY,5,5,1,Programming in C,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y1-G1,B.Sc Artificial Intelligence Year 1 Group 1,Dr. Sourav Roy,CR202
+assignment:23:session:1,THURSDAY,3,3,1,Computer Fundamentals,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y1-G1,B.Sc Artificial Intelligence Year 1 Group 1,Dr. Riya Mukherjee,CR201
+assignment:23:session:2,THURSDAY,4,4,1,Computer Fundamentals,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y1-G1,B.Sc Artificial Intelligence Year 1 Group 1,Dr. Riya Mukherjee,CR204
+assignment:23:session:3,MONDAY,3,3,1,Computer Fundamentals,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y1-G1,B.Sc Artificial Intelligence Year 1 Group 1,Dr. Riya Mukherjee,CR203
+assignment:24:session:1,WEDNESDAY,1,2,2,Programming Laboratory,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y1-G1-B1,B.Sc Artificial Intelligence Year 1 Group 1 Batch 1,Kunal Roy,LAB301
+assignment:25:session:1,TUESDAY,6,7,2,Programming Laboratory,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y1-G1-B2,B.Sc Artificial Intelligence Year 1 Group 1 Batch 2,Madhurima Sen,LAB304
+assignment:26:session:1,FRIDAY,6,6,1,Data Structures,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y2-G1,B.Sc Artificial Intelligence Year 2 Group 1,Dr. Aman Joshi,CR203
+assignment:26:session:2,FRIDAY,3,3,1,Data Structures,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y2-G1,B.Sc Artificial Intelligence Year 2 Group 1,Dr. Aman Joshi,CR205
+assignment:26:session:3,FRIDAY,4,4,1,Data Structures,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y2-G1,B.Sc Artificial Intelligence Year 2 Group 1,Dr. Aman Joshi,CR205
+assignment:27:session:1,WEDNESDAY,5,5,1,Algorithms,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y2-G1,B.Sc Artificial Intelligence Year 2 Group 1,Dr. Tanvi Rao,CR203
+assignment:27:session:2,FRIDAY,5,5,1,Algorithms,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y2-G1,B.Sc Artificial Intelligence Year 2 Group 1,Dr. Tanvi Rao,CR201
+assignment:27:session:3,THURSDAY,4,4,1,Algorithms,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y2-G1,B.Sc Artificial Intelligence Year 2 Group 1,Dr. Tanvi Rao,CR203
+assignment:28:session:1,MONDAY,3,3,1,Computer Networks,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y2-G1,B.Sc Artificial Intelligence Year 2 Group 1,Dr. Kabir Sharma,CR207
+assignment:28:session:2,TUESDAY,6,6,1,Computer Networks,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y2-G1,B.Sc Artificial Intelligence Year 2 Group 1,Dr. Kabir Sharma,CR207
+assignment:28:session:3,TUESDAY,5,5,1,Computer Networks,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y2-G1,B.Sc Artificial Intelligence Year 2 Group 1,Dr. Kabir Sharma,CR201
+assignment:29:session:1,TUESDAY,1,2,2,Web Technologies Laboratory,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y2-G1-B1,B.Sc Artificial Intelligence Year 2 Group 1 Batch 1,Aditya Sharma,LAB302
+assignment:30:session:1,FRIDAY,7,8,2,Web Technologies Laboratory,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y2-G1-B2,B.Sc Artificial Intelligence Year 2 Group 1 Batch 2,Ishita Banerjee,LAB304
+assignment:31:session:1,TUESDAY,4,4,1,Artificial Intelligence,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y3-G1,B.Sc Artificial Intelligence Year 3 Group 1,Dr. Ananya Sen,CR206
+assignment:31:session:2,THURSDAY,3,3,1,Artificial Intelligence,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y3-G1,B.Sc Artificial Intelligence Year 3 Group 1,Dr. Ananya Sen,CR206
+assignment:31:session:3,MONDAY,4,4,1,Artificial Intelligence,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y3-G1,B.Sc Artificial Intelligence Year 3 Group 1,Dr. Ananya Sen,CR202
+assignment:32:session:1,TUESDAY,5,5,1,Machine Learning,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y3-G1,B.Sc Artificial Intelligence Year 3 Group 1,Dr. Rahul Mehta,CR202
+assignment:32:session:2,THURSDAY,5,5,1,Machine Learning,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y3-G1,B.Sc Artificial Intelligence Year 3 Group 1,Dr. Rahul Mehta,CR201
+assignment:32:session:3,TUESDAY,3,3,1,Machine Learning,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y3-G1,B.Sc Artificial Intelligence Year 3 Group 1,Dr. Rahul Mehta,CR204
+assignment:33:session:1,WEDNESDAY,4,4,1,Data Science and Analytics,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y3-G1,B.Sc Artificial Intelligence Year 3 Group 1,Dr. Priya Nair,ONLINE
+assignment:33:session:2,MONDAY,3,3,1,Data Science and Analytics,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y3-G1,B.Sc Artificial Intelligence Year 3 Group 1,Dr. Priya Nair,ONLINE
+assignment:33:session:3,THURSDAY,4,4,1,Data Science and Analytics,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y3-G1,B.Sc Artificial Intelligence Year 3 Group 1,Dr. Priya Nair,ONLINE
+assignment:34:session:1,TUESDAY,1,2,2,Data Science Laboratory,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y3-G1-B1,B.Sc Artificial Intelligence Year 3 Group 1 Batch 1,Nikhil Verma,LAB301
+assignment:35:session:1,FRIDAY,7,8,2,Data Science Laboratory,BSC-AI,B.Sc Artificial Intelligence,BSC-AI-Y3-G1-B2,B.Sc Artificial Intelligence Year 3 Group 1 Batch 2,Pooja Mukherjee,LAB301
+assignment:36:session:1,MONDAY,4,4,1,Programming in C,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y1-G1,Bachelor of Computer Applications - Artificial Intelligence Year 1 Group 1,Dr. Arjun Das,CR206
+assignment:36:session:2,TUESDAY,8,8,1,Programming in C,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y1-G1,Bachelor of Computer Applications - Artificial Intelligence Year 1 Group 1,Dr. Arjun Das,CR206
+assignment:36:session:3,WEDNESDAY,6,6,1,Programming in C,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y1-G1,Bachelor of Computer Applications - Artificial Intelligence Year 1 Group 1,Dr. Arjun Das,CR201
+assignment:37:session:1,MONDAY,3,3,1,Mathematics for Computing,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y1-G1,Bachelor of Computer Applications - Artificial Intelligence Year 1 Group 1,Dr. Sneha Roy,CR201
+assignment:37:session:2,THURSDAY,1,1,1,Mathematics for Computing,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y1-G1,Bachelor of Computer Applications - Artificial Intelligence Year 1 Group 1,Dr. Sneha Roy,CR204
+assignment:37:session:3,WEDNESDAY,5,5,1,Mathematics for Computing,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y1-G1,Bachelor of Computer Applications - Artificial Intelligence Year 1 Group 1,Dr. Sneha Roy,CR201
+assignment:38:session:1,FRIDAY,6,6,1,Computer Fundamentals,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y1-G1,Bachelor of Computer Applications - Artificial Intelligence Year 1 Group 1,Dr. Vikram Bose,CR201
+assignment:38:session:2,THURSDAY,2,2,1,Computer Fundamentals,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y1-G1,Bachelor of Computer Applications - Artificial Intelligence Year 1 Group 1,Dr. Vikram Bose,CR205
+assignment:38:session:3,MONDAY,2,2,1,Computer Fundamentals,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y1-G1,Bachelor of Computer Applications - Artificial Intelligence Year 1 Group 1,Dr. Vikram Bose,CR204
+assignment:39:session:1,TUESDAY,6,7,2,Programming Laboratory,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y1-G1-B1,Bachelor of Computer Applications - Artificial Intelligence Year 1 Group 1 Batch 1,Sourav Das,LAB303
+assignment:40:session:1,FRIDAY,7,8,2,Programming Laboratory,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y1-G1-B2,Bachelor of Computer Applications - Artificial Intelligence Year 1 Group 1 Batch 2,Riya Singh,LAB303
+assignment:41:session:1,FRIDAY,4,4,1,Data Management and AI Integration,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y2-G1,Bachelor of Computer Applications - Artificial Intelligence Year 2 Group 1,Dr. Neha Kapoor,CR207
+assignment:41:session:2,TUESDAY,6,6,1,Data Management and AI Integration,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y2-G1,Bachelor of Computer Applications - Artificial Intelligence Year 2 Group 1,Dr. Neha Kapoor,CR202
+assignment:41:session:3,WEDNESDAY,8,8,1,Data Management and AI Integration,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y2-G1,Bachelor of Computer Applications - Artificial Intelligence Year 2 Group 1,Dr. Neha Kapoor,CR202
+assignment:42:session:1,TUESDAY,5,5,1,Web Technologies,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y2-G1,Bachelor of Computer Applications - Artificial Intelligence Year 2 Group 1,Dr. Rohan Gupta,CR206
+assignment:42:session:2,THURSDAY,3,3,1,Web Technologies,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y2-G1,Bachelor of Computer Applications - Artificial Intelligence Year 2 Group 1,Dr. Rohan Gupta,CR202
+assignment:42:session:3,TUESDAY,4,4,1,Web Technologies,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y2-G1,Bachelor of Computer Applications - Artificial Intelligence Year 2 Group 1,Dr. Rohan Gupta,CR207
+assignment:43:session:1,MONDAY,4,4,1,Computer Networks,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y2-G1,Bachelor of Computer Applications - Artificial Intelligence Year 2 Group 1,Dr. Meera Iyer,CR203
+assignment:43:session:2,TUESDAY,7,7,1,Computer Networks,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y2-G1,Bachelor of Computer Applications - Artificial Intelligence Year 2 Group 1,Dr. Meera Iyer,CR204
+assignment:43:session:3,MONDAY,3,3,1,Computer Networks,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y2-G1,Bachelor of Computer Applications - Artificial Intelligence Year 2 Group 1,Dr. Meera Iyer,CR206
+assignment:44:session:1,WEDNESDAY,5,6,2,Web Technologies Laboratory,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y2-G1-B1,Bachelor of Computer Applications - Artificial Intelligence Year 2 Group 1 Batch 1,Aman Gupta,LAB301
+assignment:45:session:1,THURSDAY,1,2,2,Web Technologies Laboratory,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y2-G1-B2,Bachelor of Computer Applications - Artificial Intelligence Year 2 Group 1 Batch 2,Tanvi Mehta,LAB303
+assignment:46:session:1,THURSDAY,4,4,1,Software Engineering,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y3-G1,Bachelor of Computer Applications - Artificial Intelligence Year 3 Group 1,Dr. Karan Malhotra,CR201
+assignment:46:session:2,MONDAY,3,3,1,Software Engineering,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y3-G1,Bachelor of Computer Applications - Artificial Intelligence Year 3 Group 1,Dr. Karan Malhotra,CR204
+assignment:46:session:3,TUESDAY,2,2,1,Software Engineering,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y3-G1,Bachelor of Computer Applications - Artificial Intelligence Year 3 Group 1,Dr. Karan Malhotra,CR201
+assignment:47:session:1,WEDNESDAY,5,5,1,Artificial Intelligence,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y3-G1,Bachelor of Computer Applications - Artificial Intelligence Year 3 Group 1,Dr. Ishita Verma,CR206
+assignment:47:session:2,WEDNESDAY,6,6,1,Artificial Intelligence,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y3-G1,Bachelor of Computer Applications - Artificial Intelligence Year 3 Group 1,Dr. Ishita Verma,CR202
+assignment:47:session:3,TUESDAY,1,1,1,Artificial Intelligence,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y3-G1,Bachelor of Computer Applications - Artificial Intelligence Year 3 Group 1,Dr. Ishita Verma,CR201
+assignment:48:session:1,WEDNESDAY,7,7,1,Machine Learning,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y3-G1,Bachelor of Computer Applications - Artificial Intelligence Year 3 Group 1,Dr. Nikhil Singh,ONLINE
+assignment:48:session:2,WEDNESDAY,4,4,1,Machine Learning,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y3-G1,Bachelor of Computer Applications - Artificial Intelligence Year 3 Group 1,Dr. Nikhil Singh,ONLINE
+assignment:48:session:3,FRIDAY,4,4,1,Machine Learning,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y3-G1,Bachelor of Computer Applications - Artificial Intelligence Year 3 Group 1,Dr. Nikhil Singh,ONLINE
+assignment:49:session:1,MONDAY,4,5,2,Advanced Programming Laboratory,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y3-G1-B1,Bachelor of Computer Applications - Artificial Intelligence Year 3 Group 1 Batch 1,Kunal Roy,LAB301
+assignment:50:session:1,FRIDAY,6,7,2,Advanced Programming Laboratory,BCA-AI,Bachelor of Computer Applications - Artificial Intelligence,BCA-AI-Y3-G1-B2,Bachelor of Computer Applications - Artificial Intelligence Year 3 Group 1 Batch 2,Madhurima Sen,LAB302
+assignment:51:session:1,TUESDAY,1,1,1,Signal Theory,MTECH-AI,M.Tech Artificial Intelligence,MTECH-AI-Y1-G1,M.Tech Artificial Intelligence Year 1 Group 1,Dr. Pooja Das,CR202
+assignment:51:session:2,MONDAY,7,7,1,Signal Theory,MTECH-AI,M.Tech Artificial Intelligence,MTECH-AI-Y1-G1,M.Tech Artificial Intelligence Year 1 Group 1,Dr. Pooja Das,CR206
+assignment:51:session:3,FRIDAY,8,8,1,Signal Theory,MTECH-AI,M.Tech Artificial Intelligence,MTECH-AI-Y1-G1,M.Tech Artificial Intelligence Year 1 Group 1,Dr. Pooja Das,CR202
+assignment:52:session:1,FRIDAY,5,5,1,Programming in AI,MTECH-AI,M.Tech Artificial Intelligence,MTECH-AI-Y1-G1,M.Tech Artificial Intelligence Year 1 Group 1,Dr. Sourav Roy,CR205
+assignment:52:session:2,FRIDAY,4,4,1,Programming in AI,MTECH-AI,M.Tech Artificial Intelligence,MTECH-AI-Y1-G1,M.Tech Artificial Intelligence Year 1 Group 1,Dr. Sourav Roy,CR204
+assignment:52:session:3,MONDAY,8,8,1,Programming in AI,MTECH-AI,M.Tech Artificial Intelligence,MTECH-AI-Y1-G1,M.Tech Artificial Intelligence Year 1 Group 1,Dr. Sourav Roy,CR208
+assignment:53:session:1,FRIDAY,7,7,1,Mathematics for Computing,MTECH-AI,M.Tech Artificial Intelligence,MTECH-AI-Y1-G1,M.Tech Artificial Intelligence Year 1 Group 1,Dr. Riya Mukherjee,ONLINE
+assignment:53:session:2,FRIDAY,6,6,1,Mathematics for Computing,MTECH-AI,M.Tech Artificial Intelligence,MTECH-AI-Y1-G1,M.Tech Artificial Intelligence Year 1 Group 1,Dr. Riya Mukherjee,ONLINE
+assignment:54:session:1,TUESDAY,6,7,2,Advanced Machine Learning Laboratory,MTECH-AI,M.Tech Artificial Intelligence,MTECH-AI-Y1-G1-B1,M.Tech Artificial Intelligence Year 1 Group 1 Batch 1,Aditya Sharma,LAB302
+assignment:55:session:1,MONDAY,4,5,2,Advanced Machine Learning Laboratory,MTECH-AI,M.Tech Artificial Intelligence,MTECH-AI-Y1-G1-B2,M.Tech Artificial Intelligence Year 1 Group 1 Batch 2,Ishita Banerjee,LAB304
+assignment:56:session:1,FRIDAY,5,5,1,Advanced Machine Learning,MTECH-AI,M.Tech Artificial Intelligence,MTECH-AI-Y2-G1,M.Tech Artificial Intelligence Year 2 Group 1,Dr. Aman Joshi,CR206
+assignment:56:session:2,TUESDAY,2,2,1,Advanced Machine Learning,MTECH-AI,M.Tech Artificial Intelligence,MTECH-AI-Y2-G1,M.Tech Artificial Intelligence Year 2 Group 1,Dr. Aman Joshi,CR207
+assignment:56:session:3,TUESDAY,1,1,1,Advanced Machine Learning,MTECH-AI,M.Tech Artificial Intelligence,MTECH-AI-Y2-G1,M.Tech Artificial Intelligence Year 2 Group 1,Dr. Aman Joshi,CR203
+assignment:57:session:1,FRIDAY,6,6,1,Natural Language Processing,MTECH-AI,M.Tech Artificial Intelligence,MTECH-AI-Y2-G1,M.Tech Artificial Intelligence Year 2 Group 1,Dr. Tanvi Rao,CR208
+assignment:57:session:2,MONDAY,7,7,1,Natural Language Processing,MTECH-AI,M.Tech Artificial Intelligence,MTECH-AI-Y2-G1,M.Tech Artificial Intelligence Year 2 Group 1,Dr. Tanvi Rao,CR201
+assignment:57:session:3,MONDAY,6,6,1,Natural Language Processing,MTECH-AI,M.Tech Artificial Intelligence,MTECH-AI-Y2-G1,M.Tech Artificial Intelligence Year 2 Group 1,Dr. Tanvi Rao,CR208
+assignment:58:session:1,MONDAY,5,5,1,Computer Vision,MTECH-AI,M.Tech Artificial Intelligence,MTECH-AI-Y2-G1,M.Tech Artificial Intelligence Year 2 Group 1,Dr. Kabir Sharma,ONLINE
+assignment:58:session:2,TUESDAY,3,3,1,Computer Vision,MTECH-AI,M.Tech Artificial Intelligence,MTECH-AI-Y2-G1,M.Tech Artificial Intelligence Year 2 Group 1,Dr. Kabir Sharma,ONLINE
+assignment:58:session:3,FRIDAY,7,7,1,Computer Vision,MTECH-AI,M.Tech Artificial Intelligence,MTECH-AI-Y2-G1,M.Tech Artificial Intelligence Year 2 Group 1,Dr. Kabir Sharma,ONLINE
+assignment:59:session:1,TUESDAY,6,7,2,Research Computing Laboratory,MTECH-AI,M.Tech Artificial Intelligence,MTECH-AI-Y2-G1-B1,M.Tech Artificial Intelligence Year 2 Group 1 Batch 1,Nikhil Verma,LAB301
+assignment:60:session:1,MONDAY,3,4,2,Research Computing Laboratory,MTECH-AI,M.Tech Artificial Intelligence,MTECH-AI-Y2-G1-B2,M.Tech Artificial Intelligence Year 2 Group 1 Batch 2,Pooja Mukherjee,LAB302
+assignment:61:session:1,TUESDAY,1,1,1,Machine Learning and Pattern Recognition,MCA-AI,MCA Artificial Intelligence,MCA-AI-Y1-G1,MCA Artificial Intelligence Year 1 Group 1,Dr. Ananya Sen,LH103
+assignment:61:session:2,MONDAY,3,3,1,Machine Learning and Pattern Recognition,MCA-AI,MCA Artificial Intelligence,MCA-AI-Y1-G1,MCA Artificial Intelligence Year 1 Group 1,Dr. Ananya Sen,LH101
+assignment:61:session:3,TUESDAY,3,3,1,Machine Learning and Pattern Recognition,MCA-AI,MCA Artificial Intelligence,MCA-AI-Y1-G1,MCA Artificial Intelligence Year 1 Group 1,Dr. Ananya Sen,LH101
+assignment:62:session:1,TUESDAY,2,2,1,Data Science and Analytics,MCA-AI,MCA Artificial Intelligence,MCA-AI-Y1-G1,MCA Artificial Intelligence Year 1 Group 1,Dr. Rahul Mehta,LH101
+assignment:62:session:2,FRIDAY,5,5,1,Data Science and Analytics,MCA-AI,MCA Artificial Intelligence,MCA-AI-Y1-G1,MCA Artificial Intelligence Year 1 Group 1,Dr. Rahul Mehta,LH104
+assignment:62:session:3,TUESDAY,4,4,1,Data Science and Analytics,MCA-AI,MCA Artificial Intelligence,MCA-AI-Y1-G1,MCA Artificial Intelligence Year 1 Group 1,Dr. Rahul Mehta,LH101
+assignment:63:session:1,WEDNESDAY,3,3,1,Mathematics for Computing,MCA-AI,MCA Artificial Intelligence,MCA-AI-Y1-G1,MCA Artificial Intelligence Year 1 Group 1,Dr. Priya Nair,CR202
+assignment:63:session:2,TUESDAY,5,5,1,Mathematics for Computing,MCA-AI,MCA Artificial Intelligence,MCA-AI-Y1-G1,MCA Artificial Intelligence Year 1 Group 1,Dr. Priya Nair,CR205
+assignment:63:session:3,FRIDAY,4,4,1,Mathematics for Computing,MCA-AI,MCA Artificial Intelligence,MCA-AI-Y1-G1,MCA Artificial Intelligence Year 1 Group 1,Dr. Priya Nair,CR201
+assignment:64:session:1,MONDAY,1,2,2,Programming for Artificial Intelligence Laboratory,MCA-AI,MCA Artificial Intelligence,MCA-AI-Y1-G1-B1,MCA Artificial Intelligence Year 1 Group 1 Batch 1,Sourav Das,LAB304
+assignment:65:session:1,MONDAY,6,7,2,Programming for Artificial Intelligence Laboratory,MCA-AI,MCA Artificial Intelligence,MCA-AI-Y1-G1-B2,MCA Artificial Intelligence Year 1 Group 1 Batch 2,Riya Singh,LAB304
+assignment:66:session:1,TUESDAY,4,4,1,Advanced Data Analytics,MCA-AI,MCA Artificial Intelligence,MCA-AI-Y2-G1,MCA Artificial Intelligence Year 2 Group 1,Dr. Arjun Das,CR202
+assignment:66:session:2,TUESDAY,7,7,1,Advanced Data Analytics,MCA-AI,MCA Artificial Intelligence,MCA-AI-Y2-G1,MCA Artificial Intelligence Year 2 Group 1,Dr. Arjun Das,CR205
+assignment:66:session:3,FRIDAY,7,7,1,Advanced Data Analytics,MCA-AI,MCA Artificial Intelligence,MCA-AI-Y2-G1,MCA Artificial Intelligence Year 2 Group 1,Dr. Arjun Das,CR203
+assignment:67:session:1,TUESDAY,5,5,1,Artificial Intelligence,MCA-AI,MCA Artificial Intelligence,MCA-AI-Y2-G1,MCA Artificial Intelligence Year 2 Group 1,Dr. Sneha Roy,CR207
+assignment:67:session:2,TUESDAY,6,6,1,Artificial Intelligence,MCA-AI,MCA Artificial Intelligence,MCA-AI-Y2-G1,MCA Artificial Intelligence Year 2 Group 1,Dr. Sneha Roy,CR203
+assignment:67:session:3,TUESDAY,3,3,1,Artificial Intelligence,MCA-AI,MCA Artificial Intelligence,MCA-AI-Y2-G1,MCA Artificial Intelligence Year 2 Group 1,Dr. Sneha Roy,CR201
+assignment:68:session:1,TUESDAY,8,8,1,Cloud Computing,MCA-AI,MCA Artificial Intelligence,MCA-AI-Y2-G1,MCA Artificial Intelligence Year 2 Group 1,Dr. Vikram Bose,ONLINE
+assignment:68:session:2,TUESDAY,1,1,1,Cloud Computing,MCA-AI,MCA Artificial Intelligence,MCA-AI-Y2-G1,MCA Artificial Intelligence Year 2 Group 1,Dr. Vikram Bose,ONLINE
+assignment:68:session:3,TUESDAY,2,2,1,Cloud Computing,MCA-AI,MCA Artificial Intelligence,MCA-AI-Y2-G1,MCA Artificial Intelligence Year 2 Group 1,Dr. Vikram Bose,ONLINE
+assignment:69:session:1,MONDAY,2,3,2,Artificial Intelligence Laboratory,MCA-AI,MCA Artificial Intelligence,MCA-AI-Y2-G1-B1,MCA Artificial Intelligence Year 2 Group 1 Batch 1,Aman Gupta,LAB303
+assignment:70:session:1,MONDAY,6,7,2,Artificial Intelligence Laboratory,MCA-AI,MCA Artificial Intelligence,MCA-AI-Y2-G1-B2,MCA Artificial Intelligence Year 2 Group 1 Batch 2,Tanvi Mehta,LAB303
+assignment:71:session:1,TUESDAY,2,2,1,Artificial Intelligence,MSC-AI,M.Sc Artificial Intelligence,MSC-AI-Y1-G1,M.Sc Artificial Intelligence Year 1 Group 1,Dr. Neha Kapoor,CR208
+assignment:71:session:2,MONDAY,4,4,1,Artificial Intelligence,MSC-AI,M.Sc Artificial Intelligence,MSC-AI-Y1-G1,M.Sc Artificial Intelligence Year 1 Group 1,Dr. Neha Kapoor,CR201
+assignment:71:session:3,THURSDAY,6,6,1,Artificial Intelligence,MSC-AI,M.Sc Artificial Intelligence,MSC-AI-Y1-G1,M.Sc Artificial Intelligence Year 1 Group 1,Dr. Neha Kapoor,CR201
+assignment:72:session:1,TUESDAY,1,1,1,Machine Learning,MSC-AI,M.Sc Artificial Intelligence,MSC-AI-Y1-G1,M.Sc Artificial Intelligence Year 1 Group 1,Dr. Rohan Gupta,CR207
+assignment:72:session:2,MONDAY,6,6,1,Machine Learning,MSC-AI,M.Sc Artificial Intelligence,MSC-AI-Y1-G1,M.Sc Artificial Intelligence Year 1 Group 1,Dr. Rohan Gupta,CR207
+assignment:72:session:3,MONDAY,5,5,1,Machine Learning,MSC-AI,M.Sc Artificial Intelligence,MSC-AI-Y1-G1,M.Sc Artificial Intelligence Year 1 Group 1,Dr. Rohan Gupta,CR204
+assignment:73:session:1,TUESDAY,4,4,1,Research Methodology,MSC-AI,M.Sc Artificial Intelligence,MSC-AI-Y1-G1,M.Sc Artificial Intelligence Year 1 Group 1,Dr. Meera Iyer,ONLINE
+assignment:73:session:2,TUESDAY,3,3,1,Research Methodology,MSC-AI,M.Sc Artificial Intelligence,MSC-AI-Y1-G1,M.Sc Artificial Intelligence Year 1 Group 1,Dr. Meera Iyer,ONLINE
+assignment:74:session:1,MONDAY,2,3,2,Advanced Programming Laboratory,MSC-AI,M.Sc Artificial Intelligence,MSC-AI-Y1-G1-B1,M.Sc Artificial Intelligence Year 1 Group 1 Batch 1,Kunal Roy,LAB301
+assignment:75:session:1,MONDAY,7,8,2,Advanced Programming Laboratory,MSC-AI,M.Sc Artificial Intelligence,MSC-AI-Y1-G1-B2,M.Sc Artificial Intelligence Year 1 Group 1 Batch 2,Madhurima Sen,LAB302
+assignment:76:session:1,WEDNESDAY,1,1,1,Deep Learning,MSC-AI,M.Sc Artificial Intelligence,MSC-AI-Y2-G1,M.Sc Artificial Intelligence Year 2 Group 1,Dr. Karan Malhotra,CR201
+assignment:76:session:2,MONDAY,5,5,1,Deep Learning,MSC-AI,M.Sc Artificial Intelligence,MSC-AI-Y2-G1,M.Sc Artificial Intelligence Year 2 Group 1,Dr. Karan Malhotra,CR202
+assignment:76:session:3,TUESDAY,5,5,1,Deep Learning,MSC-AI,M.Sc Artificial Intelligence,MSC-AI-Y2-G1,M.Sc Artificial Intelligence Year 2 Group 1,Dr. Karan Malhotra,CR208
+assignment:77:session:1,TUESDAY,8,8,1,Natural Language Processing,MSC-AI,M.Sc Artificial Intelligence,MSC-AI-Y2-G1,M.Sc Artificial Intelligence Year 2 Group 1,Dr. Ishita Verma,CR208
+assignment:77:session:2,TUESDAY,6,6,1,Natural Language Processing,MSC-AI,M.Sc Artificial Intelligence,MSC-AI-Y2-G1,M.Sc Artificial Intelligence Year 2 Group 1,Dr. Ishita Verma,CR205
+assignment:77:session:3,TUESDAY,3,3,1,Natural Language Processing,MSC-AI,M.Sc Artificial Intelligence,MSC-AI-Y2-G1,M.Sc Artificial Intelligence Year 2 Group 1,Dr. Ishita Verma,CR202
+assignment:78:session:1,TUESDAY,4,4,1,Computer Vision,MSC-AI,M.Sc Artificial Intelligence,MSC-AI-Y2-G1,M.Sc Artificial Intelligence Year 2 Group 1,Dr. Nikhil Singh,ONLINE
+assignment:78:session:2,TUESDAY,7,7,1,Computer Vision,MSC-AI,M.Sc Artificial Intelligence,MSC-AI-Y2-G1,M.Sc Artificial Intelligence Year 2 Group 1,Dr. Nikhil Singh,ONLINE
+assignment:78:session:3,MONDAY,4,4,1,Computer Vision,MSC-AI,M.Sc Artificial Intelligence,MSC-AI-Y2-G1,M.Sc Artificial Intelligence Year 2 Group 1,Dr. Nikhil Singh,ONLINE
+assignment:79:session:1,MONDAY,1,2,2,AI Research Laboratory,MSC-AI,M.Sc Artificial Intelligence,MSC-AI-Y2-G1-B1,M.Sc Artificial Intelligence Year 2 Group 1 Batch 1,Aditya Sharma,LAB302
+assignment:80:session:1,MONDAY,6,7,2,AI Research Laboratory,MSC-AI,M.Sc Artificial Intelligence,MSC-AI-Y2-G1-B2,M.Sc Artificial Intelligence Year 2 Group 1 Batch 2,Ishita Banerjee,LAB301

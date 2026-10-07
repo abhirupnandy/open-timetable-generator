@@ -40,6 +40,11 @@ def build_timetable_input_from_db(db: Session) -> TimetableInput:
         if group.capacity is not None
     }
 
+    academic_group_parent_ids = {
+        group.id: group.parent_group_id
+        for group in groups
+    }
+
     scheduling_rooms = tuple(
         SchedulingRoom(
             id=room.id,
@@ -53,5 +58,6 @@ def build_timetable_input_from_db(db: Session) -> TimetableInput:
     return build_timetable_input(
         teaching_assignments,
         academic_group_capacities=academic_group_capacities,
+        academic_group_parent_ids=academic_group_parent_ids,
         rooms=scheduling_rooms,
     )

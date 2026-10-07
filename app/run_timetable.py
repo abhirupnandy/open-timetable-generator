@@ -2,13 +2,21 @@ from __future__ import annotations
 
 import threading
 import time
+from pathlib import Path
 
 from app.db.session import SessionLocal
 from app.domain.db_input import build_timetable_input_from_db
 from app.domain.db_render_data import load_render_metadata
 from app.domain.problem import SchedulingProblem
 from app.domain.render import render_timetable
+from app.domain.timetable_view_builder import build_timetable_view_entries
 from app.domain.validator import validate_timetable
+from app.export.csv_export import export_timetable_csv
+from app.export.excel_export import (
+    export_day_workbook,
+    export_faculty_workbook,
+    export_master_workbook,
+)
 from app.optimisation.evaluation import calculate_student_group_gaps
 from app.optimisation.solver import solve
 
@@ -138,7 +146,71 @@ def main() -> None:
         )
     )
 
+    print("[5/5] Preparing timetable export data...", flush=True)
+
+    with SessionLocal() as db:
+        view_entries = build_timetable_view_entries(
+            db,
+            result.timetable,
+        )
+
+    output_dir = Path("output")
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # CSV export
+    print("[5/5] Exporting CSV...", flush=True)
+
+    csv_path = export_timetable_csv(
+        view_entries,
+        output_dir / "timetable_master.csv",
+    )
+
+    print(
+        f"[5/5] CSV exported to {csv_path}",
+        flush=True,
+    )
+
+    # Master Excel workbook
+    print("[5/5] Exporting master Excel workbook...", flush=True)
+
+    master_excel_path = export_master_workbook(
+        view_entries,
+        output_dir / "timetable_master.xlsx",
+    )
+
+    print(
+        f"[5/5] Master Excel exported to {master_excel_path}",
+        flush=True,
+    )
+
+    # Day-wise Excel workbook
+    print("[5/5] Exporting day-wise Excel workbook...", flush=True)
+
+    day_excel_path = export_day_workbook(
+        view_entries,
+        output_dir / "timetable_by_day.xlsx",
+    )
+
+    print(
+        f"[5/5] Day-wise Excel exported to {day_excel_path}",
+        flush=True,
+    )
+
+    # Faculty-wise Excel workbook
+    print("[5/5] Exporting faculty-wise Excel workbook...", flush=True)
+
+    faculty_excel_path = export_faculty_workbook(
+        view_entries,
+        output_dir / "timetable_by_faculty.xlsx",
+    )
+
+    print(
+        f"[5/5] Faculty-wise Excel exported to {faculty_excel_path}",
+        flush=True,
+    )
+
     total_elapsed = time.perf_counter() - total_start
+
     print()
     print(f"Completed in {total_elapsed:.2f}s.")
 

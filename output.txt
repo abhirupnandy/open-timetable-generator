@@ -1,0 +1,250 @@
+[1/5] Loading timetable data from database...
+[1/5] Loaded 173 scheduling sessions and 16 rooms.
+[2/5] Building scheduling problem...
+[2/5] Scheduling problem ready.
+[3/5] Running CP-SAT solver...
+[SOLVER] CP-SAT still running... 5s elapsed
+[SOLVER] CP-SAT still running... 10s elapsed
+[SOLVER] CP-SAT still running... 15s elapsed
+[SOLVER] CP-SAT still running... 20s elapsed
+[SOLVER] CP-SAT still running... 25s elapsed
+[SOLVER] CP-SAT still running... 30s elapsed
+[SOLVER] CP-SAT still running... 35s elapsed
+[SOLVER] CP-SAT still running... 40s elapsed
+[SOLVER] CP-SAT still running... 45s elapsed
+[SOLVER] CP-SAT still running... 50s elapsed
+[SOLVER] CP-SAT still running... 55s elapsed
+[SOLVER] CP-SAT still running... 60s elapsed
+[SOLVER] CP-SAT still running... 65s elapsed
+[SOLVER] CP-SAT still running... 70s elapsed
+[SOLVER] CP-SAT still running... 75s elapsed
+[SOLVER] CP-SAT still running... 80s elapsed
+[SOLVER] CP-SAT still running... 85s elapsed
+[SOLVER] CP-SAT still running... 90s elapsed
+[SOLVER] CP-SAT still running... 95s elapsed
+[SOLVER] CP-SAT still running... 100s elapsed
+[SOLVER] CP-SAT still running... 105s elapsed
+[SOLVER] CP-SAT still running... 110s elapsed
+[SOLVER] CP-SAT still running... 115s elapsed
+[SOLVER] CP-SAT still running... 120s elapsed
+[SOLVER] CP-SAT still running... 125s elapsed
+[SOLVER] CP-SAT still running... 130s elapsed
+[SOLVER] CP-SAT still running... 135s elapsed
+[SOLVER] CP-SAT still running... 140s elapsed
+[SOLVER] CP-SAT still running... 145s elapsed
+[SOLVER] CP-SAT still running... 150s elapsed
+[SOLVER] CP-SAT still running... 155s elapsed
+[SOLVER] CP-SAT still running... 160s elapsed
+[SOLVER] CP-SAT still running... 165s elapsed
+[SOLVER] CP-SAT still running... 170s elapsed
+[SOLVER] CP-SAT still running... 175s elapsed
+[SOLVER] CP-SAT still running... 180s elapsed
+[SOLVER] CP-SAT still running... 185s elapsed
+[SOLVER] CP-SAT still running... 190s elapsed
+[SOLVER] CP-SAT still running... 195s elapsed
+[3/5] Solver finished in 197.28s.
+[4/5] Validating solver output...
+[4/5] Hard constraints: PASS
+[4/5] Hard conflicts: 0
+[4/5] Scheduled 173 of 173 sessions.
+[4/5] Student-group gaps (S1): 0
+[5/5] Rendering timetable...
+
+MONDAY
+------
+P1-2   Programming for Artificial Intelligence Laboratory MCA Artificial Intelligence Year 1 Group 1 Batch 1 Sourav Das               LAB304
+P1-2   AI Research Laboratory       M.Sc Artificial Intelligence Year 2 Group 1 Batch 1 Aditya Sharma            LAB302
+P2     Computer Fundamentals        Bachelor of Computer Applications - Artificial Intelligence Year 1 Group 1 Dr. Vikram Bose          CR204
+P2-3   Artificial Intelligence Laboratory MCA Artificial Intelligence Year 2 Group 1 Batch 1 Aman Gupta               LAB303
+P2-3   Advanced Programming Laboratory M.Sc Artificial Intelligence Year 1 Group 1 Batch 1 Kunal Roy                LAB301
+P3     Data Management and AI Integration B.Tech Artificial Intelligence Year 3 Group 1 Dr. Rohan Gupta          CR202
+P3     Agentic AI                   B.Tech Artificial Intelligence Year 4 Group 1 Dr. Nikhil Singh         ONLINE
+P3     Computer Fundamentals        B.Sc Artificial Intelligence Year 1 Group 1 Dr. Riya Mukherjee       CR203
+P3     Computer Networks            B.Sc Artificial Intelligence Year 2 Group 1 Dr. Kabir Sharma         CR207
+P3     Data Science and Analytics   B.Sc Artificial Intelligence Year 3 Group 1 Dr. Priya Nair           ONLINE
+P3     Mathematics for Computing    Bachelor of Computer Applications - Artificial Intelligence Year 1 Group 1 Dr. Sneha Roy            CR201
+P3     Computer Networks            Bachelor of Computer Applications - Artificial Intelligence Year 2 Group 1 Dr. Meera Iyer           CR206
+P3     Software Engineering         Bachelor of Computer Applications - Artificial Intelligence Year 3 Group 1 Dr. Karan Malhotra       CR204
+P3-4   Research Computing Laboratory M.Tech Artificial Intelligence Year 2 Group 1 Batch 2 Pooja Mukherjee          LAB302
+P3     Machine Learning and Pattern Recognition MCA Artificial Intelligence Year 1 Group 1 Dr. Ananya Sen           LH101
+P4     Artificial Intelligence      B.Sc Artificial Intelligence Year 3 Group 1 Dr. Ananya Sen           CR202
+P4     Programming in C             Bachelor of Computer Applications - Artificial Intelligence Year 1 Group 1 Dr. Arjun Das            CR206
+P4     Computer Networks            Bachelor of Computer Applications - Artificial Intelligence Year 2 Group 1 Dr. Meera Iyer           CR203
+P4-5   Advanced Programming Laboratory Bachelor of Computer Applications - Artificial Intelligence Year 3 Group 1 Batch 1 Kunal Roy                LAB301
+P4-5   Advanced Machine Learning Laboratory M.Tech Artificial Intelligence Year 1 Group 1 Batch 2 Ishita Banerjee          LAB304
+P4     Artificial Intelligence      M.Sc Artificial Intelligence Year 1 Group 1 Dr. Neha Kapoor          CR201
+P4     Computer Vision              M.Sc Artificial Intelligence Year 2 Group 1 Dr. Nikhil Singh         ONLINE
+P4     Computer Organization        B.Tech Artificial Intelligence Year 2 Group 1 Dr. Sneha Roy            CR204
+P5-6   Programming Fundamentals Laboratory B.Tech Artificial Intelligence Year 1 Group 1 Batch 1 Aditya Sharma            LAB302
+P5     Computer Vision              M.Tech Artificial Intelligence Year 2 Group 1 Dr. Kabir Sharma         ONLINE
+P5     Machine Learning             M.Sc Artificial Intelligence Year 1 Group 1 Dr. Rohan Gupta          CR204
+P5     Deep Learning                M.Sc Artificial Intelligence Year 2 Group 1 Dr. Karan Malhotra       CR202
+P6     Natural Language Processing  M.Tech Artificial Intelligence Year 2 Group 1 Dr. Tanvi Rao            CR208
+P6-7   Programming for Artificial Intelligence Laboratory MCA Artificial Intelligence Year 1 Group 1 Batch 2 Riya Singh               LAB304
+P6-7   Artificial Intelligence Laboratory MCA Artificial Intelligence Year 2 Group 1 Batch 2 Tanvi Mehta              LAB303
+P6     Machine Learning             M.Sc Artificial Intelligence Year 1 Group 1 Dr. Rohan Gupta          CR207
+P6-7   AI Research Laboratory       M.Sc Artificial Intelligence Year 2 Group 1 Batch 2 Ishita Banerjee          LAB301
+P7     Signal Theory                M.Tech Artificial Intelligence Year 1 Group 1 Dr. Pooja Das            CR206
+P7     Natural Language Processing  M.Tech Artificial Intelligence Year 2 Group 1 Dr. Tanvi Rao            CR201
+P7-8   Advanced Programming Laboratory M.Sc Artificial Intelligence Year 1 Group 1 Batch 2 Madhurima Sen            LAB302
+P8     Programming in AI            M.Tech Artificial Intelligence Year 1 Group 1 Dr. Sourav Roy           CR208
+
+TUESDAY
+-------
+P1-2   Machine Learning Laboratory  B.Tech Artificial Intelligence Year 3 Group 1 Batch 2 Riya Singh               LAB304
+P1-2   Artificial Intelligence Laboratory B.Tech Artificial Intelligence Year 4 Group 1 Batch 2 Tanvi Mehta              LAB303
+P1-2   Web Technologies Laboratory  B.Sc Artificial Intelligence Year 2 Group 1 Batch 1 Aditya Sharma            LAB302
+P1-2   Data Science Laboratory      B.Sc Artificial Intelligence Year 3 Group 1 Batch 1 Nikhil Verma             LAB301
+P1     Artificial Intelligence      Bachelor of Computer Applications - Artificial Intelligence Year 3 Group 1 Dr. Ishita Verma         CR201
+P1     Signal Theory                M.Tech Artificial Intelligence Year 1 Group 1 Dr. Pooja Das            CR202
+P1     Advanced Machine Learning    M.Tech Artificial Intelligence Year 2 Group 1 Dr. Aman Joshi           CR203
+P1     Machine Learning and Pattern Recognition MCA Artificial Intelligence Year 1 Group 1 Dr. Ananya Sen           LH103
+P1     Cloud Computing              MCA Artificial Intelligence Year 2 Group 1 Dr. Vikram Bose          ONLINE
+P1     Machine Learning             M.Sc Artificial Intelligence Year 1 Group 1 Dr. Rohan Gupta          CR207
+P2     Software Engineering         Bachelor of Computer Applications - Artificial Intelligence Year 3 Group 1 Dr. Karan Malhotra       CR201
+P2     Advanced Machine Learning    M.Tech Artificial Intelligence Year 2 Group 1 Dr. Aman Joshi           CR207
+P2     Data Science and Analytics   MCA Artificial Intelligence Year 1 Group 1 Dr. Rahul Mehta          LH101
+P2     Cloud Computing              MCA Artificial Intelligence Year 2 Group 1 Dr. Vikram Bose          ONLINE
+P2     Data Structures              B.Tech Artificial Intelligence Year 2 Group 1 Dr. Arjun Das            CR203
+P2     Artificial Intelligence      M.Sc Artificial Intelligence Year 1 Group 1 Dr. Neha Kapoor          CR208
+P3     Machine Learning             B.Sc Artificial Intelligence Year 3 Group 1 Dr. Rahul Mehta          CR204
+P3     Computer Vision              M.Tech Artificial Intelligence Year 2 Group 1 Dr. Kabir Sharma         ONLINE
+P3     Machine Learning and Pattern Recognition MCA Artificial Intelligence Year 1 Group 1 Dr. Ananya Sen           LH101
+P3     Artificial Intelligence      MCA Artificial Intelligence Year 2 Group 1 Dr. Sneha Roy            CR201
+P3     Research Methodology         M.Sc Artificial Intelligence Year 1 Group 1 Dr. Meera Iyer           ONLINE
+P3     Natural Language Processing  M.Sc Artificial Intelligence Year 2 Group 1 Dr. Ishita Verma         CR202
+P4     Generative AI                B.Tech Artificial Intelligence Year 4 Group 1 Dr. Karan Malhotra       LH104
+P4     Artificial Intelligence      B.Sc Artificial Intelligence Year 3 Group 1 Dr. Ananya Sen           CR206
+P4     Web Technologies             Bachelor of Computer Applications - Artificial Intelligence Year 2 Group 1 Dr. Rohan Gupta          CR207
+P4     Data Science and Analytics   MCA Artificial Intelligence Year 1 Group 1 Dr. Rahul Mehta          LH101
+P4     Advanced Data Analytics      MCA Artificial Intelligence Year 2 Group 1 Dr. Arjun Das            CR202
+P4     Research Methodology         M.Sc Artificial Intelligence Year 1 Group 1 Dr. Meera Iyer           ONLINE
+P4     Computer Vision              M.Sc Artificial Intelligence Year 2 Group 1 Dr. Nikhil Singh         ONLINE
+P5     Computer Vision              B.Tech Artificial Intelligence Year 4 Group 1 Dr. Ishita Verma         LH103
+P5     Calculus and Linear Algebra  B.Tech Artificial Intelligence Year 1 Group 1 Dr. Ananya Sen           CR203
+P5     Mathematics for Computing    B.Sc Artificial Intelligence Year 1 Group 1 Dr. Pooja Das            CR204
+P5     Computer Networks            B.Sc Artificial Intelligence Year 2 Group 1 Dr. Kabir Sharma         CR201
+P5     Machine Learning             B.Sc Artificial Intelligence Year 3 Group 1 Dr. Rahul Mehta          CR202
+P5     Web Technologies             Bachelor of Computer Applications - Artificial Intelligence Year 2 Group 1 Dr. Rohan Gupta          CR206
+P5     Mathematics for Computing    MCA Artificial Intelligence Year 1 Group 1 Dr. Priya Nair           CR205
+P5     Artificial Intelligence      MCA Artificial Intelligence Year 2 Group 1 Dr. Sneha Roy            CR207
+P5     Deep Learning                M.Sc Artificial Intelligence Year 2 Group 1 Dr. Karan Malhotra       CR208
+P6-7   Programming Laboratory       B.Sc Artificial Intelligence Year 1 Group 1 Batch 2 Madhurima Sen            LAB304
+P6     Computer Networks            B.Sc Artificial Intelligence Year 2 Group 1 Dr. Kabir Sharma         CR207
+P6     Programming Fundamentals     B.Tech Artificial Intelligence Year 1 Group 1 Dr. Rahul Mehta          CR201
+P6-7   Programming Laboratory       Bachelor of Computer Applications - Artificial Intelligence Year 1 Group 1 Batch 1 Sourav Das               LAB303
+P6     Data Management and AI Integration Bachelor of Computer Applications - Artificial Intelligence Year 2 Group 1 Dr. Neha Kapoor          CR202
+P6-7   Advanced Machine Learning Laboratory M.Tech Artificial Intelligence Year 1 Group 1 Batch 1 Aditya Sharma            LAB302
+P6-7   Research Computing Laboratory M.Tech Artificial Intelligence Year 2 Group 1 Batch 1 Nikhil Verma             LAB301
+P6     Artificial Intelligence      MCA Artificial Intelligence Year 2 Group 1 Dr. Sneha Roy            CR203
+P6     Natural Language Processing  M.Sc Artificial Intelligence Year 2 Group 1 Dr. Ishita Verma         CR205
+P7     Programming Fundamentals     B.Tech Artificial Intelligence Year 1 Group 1 Dr. Rahul Mehta          CR203
+P7     Computer Networks            Bachelor of Computer Applications - Artificial Intelligence Year 2 Group 1 Dr. Meera Iyer           CR204
+P7     Advanced Data Analytics      MCA Artificial Intelligence Year 2 Group 1 Dr. Arjun Das            CR205
+P7     Computer Vision              M.Sc Artificial Intelligence Year 2 Group 1 Dr. Nikhil Singh         ONLINE
+P8     Machine Learning             B.Tech Artificial Intelligence Year 3 Group 1 Dr. Neha Kapoor          CR201
+P8     Programming in C             Bachelor of Computer Applications - Artificial Intelligence Year 1 Group 1 Dr. Arjun Das            CR206
+P8     Digital Electronics          B.Tech Artificial Intelligence Year 1 Group 1 Dr. Priya Nair           CR202
+P8     Cloud Computing              MCA Artificial Intelligence Year 2 Group 1 Dr. Vikram Bose          ONLINE
+P8     Natural Language Processing  M.Sc Artificial Intelligence Year 2 Group 1 Dr. Ishita Verma         CR208
+
+WEDNESDAY
+---------
+P1-2   Programming Laboratory       B.Sc Artificial Intelligence Year 1 Group 1 Batch 1 Kunal Roy                LAB301
+P1     Deep Learning                M.Sc Artificial Intelligence Year 2 Group 1 Dr. Karan Malhotra       CR201
+P3     Machine Learning             B.Tech Artificial Intelligence Year 3 Group 1 Dr. Neha Kapoor          CR201
+P3     Agentic AI                   B.Tech Artificial Intelligence Year 4 Group 1 Dr. Nikhil Singh         ONLINE
+P3     Calculus and Linear Algebra  B.Tech Artificial Intelligence Year 1 Group 1 Dr. Ananya Sen           CR204
+P3     Programming in C             B.Sc Artificial Intelligence Year 1 Group 1 Dr. Sourav Roy           CR205
+P3     Mathematics for Computing    MCA Artificial Intelligence Year 1 Group 1 Dr. Priya Nair           CR202
+P3     Computer Organization        B.Tech Artificial Intelligence Year 2 Group 1 Dr. Sneha Roy            CR203
+P4     Data Management and AI Integration B.Tech Artificial Intelligence Year 3 Group 1 Dr. Rohan Gupta          CR203
+P4     Computer Vision              B.Tech Artificial Intelligence Year 4 Group 1 Dr. Ishita Verma         LH103
+P4     Mathematics for Computing    B.Sc Artificial Intelligence Year 1 Group 1 Dr. Pooja Das            CR202
+P4     Programming Fundamentals     B.Tech Artificial Intelligence Year 1 Group 1 Dr. Rahul Mehta          CR201
+P4     Data Science and Analytics   B.Sc Artificial Intelligence Year 3 Group 1 Dr. Priya Nair           ONLINE
+P4     Machine Learning             Bachelor of Computer Applications - Artificial Intelligence Year 3 Group 1 Dr. Nikhil Singh         ONLINE
+P4     Probability and Statistics   B.Tech Artificial Intelligence Year 2 Group 1 Dr. Vikram Bose          CR204
+P5     Numerical Methods and Optimization Techniques B.Tech Artificial Intelligence Year 3 Group 1 Dr. Meera Iyer           ONLINE
+P5     Agentic AI                   B.Tech Artificial Intelligence Year 4 Group 1 Dr. Nikhil Singh         ONLINE
+P5     Programming in C             B.Sc Artificial Intelligence Year 1 Group 1 Dr. Sourav Roy           CR202
+P5     Algorithms                   B.Sc Artificial Intelligence Year 2 Group 1 Dr. Tanvi Rao            CR203
+P5     Mathematics for Computing    Bachelor of Computer Applications - Artificial Intelligence Year 1 Group 1 Dr. Sneha Roy            CR201
+P5-6   Web Technologies Laboratory  Bachelor of Computer Applications - Artificial Intelligence Year 2 Group 1 Batch 1 Aman Gupta               LAB301
+P5     Artificial Intelligence      Bachelor of Computer Applications - Artificial Intelligence Year 3 Group 1 Dr. Ishita Verma         CR206
+P5     Probability and Statistics   B.Tech Artificial Intelligence Year 2 Group 1 Dr. Vikram Bose          CR204
+P6     Programming in C             Bachelor of Computer Applications - Artificial Intelligence Year 1 Group 1 Dr. Arjun Das            CR201
+P6     Artificial Intelligence      Bachelor of Computer Applications - Artificial Intelligence Year 3 Group 1 Dr. Ishita Verma         CR202
+P6     Probability and Statistics   B.Tech Artificial Intelligence Year 2 Group 1 Dr. Vikram Bose          CR203
+P7     Machine Learning             Bachelor of Computer Applications - Artificial Intelligence Year 3 Group 1 Dr. Nikhil Singh         ONLINE
+P7-8   Data Structures Laboratory   B.Tech Artificial Intelligence Year 2 Group 1 Batch 1 Nikhil Verma             LAB301
+P8     Data Management and AI Integration Bachelor of Computer Applications - Artificial Intelligence Year 2 Group 1 Dr. Neha Kapoor          CR202
+
+THURSDAY
+--------
+P1-2   Data Structures Laboratory   B.Tech Artificial Intelligence Year 2 Group 1 Batch 2 Pooja Mukherjee          LAB302
+P1     Mathematics for Computing    Bachelor of Computer Applications - Artificial Intelligence Year 1 Group 1 Dr. Sneha Roy            CR204
+P1-2   Web Technologies Laboratory  Bachelor of Computer Applications - Artificial Intelligence Year 2 Group 1 Batch 2 Tanvi Mehta              LAB303
+P1-2   Programming Fundamentals Laboratory B.Tech Artificial Intelligence Year 1 Group 1 Batch 2 Ishita Banerjee          LAB301
+P2     Computer Fundamentals        Bachelor of Computer Applications - Artificial Intelligence Year 1 Group 1 Dr. Vikram Bose          CR205
+P3     Numerical Methods and Optimization Techniques B.Tech Artificial Intelligence Year 3 Group 1 Dr. Meera Iyer           ONLINE
+P3     Generative AI                B.Tech Artificial Intelligence Year 4 Group 1 Dr. Karan Malhotra       LH102
+P3     Computer Fundamentals        B.Sc Artificial Intelligence Year 1 Group 1 Dr. Riya Mukherjee       CR201
+P3     Artificial Intelligence      B.Sc Artificial Intelligence Year 3 Group 1 Dr. Ananya Sen           CR206
+P3     Web Technologies             Bachelor of Computer Applications - Artificial Intelligence Year 2 Group 1 Dr. Rohan Gupta          CR202
+P3     Data Structures              B.Tech Artificial Intelligence Year 2 Group 1 Dr. Arjun Das            CR203
+P4     Computer Vision              B.Tech Artificial Intelligence Year 4 Group 1 Dr. Ishita Verma         LH102
+P4     Computer Fundamentals        B.Sc Artificial Intelligence Year 1 Group 1 Dr. Riya Mukherjee       CR204
+P4     Algorithms                   B.Sc Artificial Intelligence Year 2 Group 1 Dr. Tanvi Rao            CR203
+P4     Data Science and Analytics   B.Sc Artificial Intelligence Year 3 Group 1 Dr. Priya Nair           ONLINE
+P4     Software Engineering         Bachelor of Computer Applications - Artificial Intelligence Year 3 Group 1 Dr. Karan Malhotra       CR201
+P4     Data Structures              B.Tech Artificial Intelligence Year 2 Group 1 Dr. Arjun Das            CR202
+P5     Generative AI                B.Tech Artificial Intelligence Year 4 Group 1 Dr. Karan Malhotra       LH101
+P5     Programming in C             B.Sc Artificial Intelligence Year 1 Group 1 Dr. Sourav Roy           CR206
+P5     Machine Learning             B.Sc Artificial Intelligence Year 3 Group 1 Dr. Rahul Mehta          CR201
+P6     Artificial Intelligence      M.Sc Artificial Intelligence Year 1 Group 1 Dr. Neha Kapoor          CR201
+P7     Digital Electronics          B.Tech Artificial Intelligence Year 1 Group 1 Dr. Priya Nair           CR201
+
+FRIDAY
+------
+P2     Data Management and AI Integration B.Tech Artificial Intelligence Year 3 Group 1 Dr. Rohan Gupta          CR201
+P3     Machine Learning             B.Tech Artificial Intelligence Year 3 Group 1 Dr. Neha Kapoor          CR203
+P3     Mathematics for Computing    B.Sc Artificial Intelligence Year 1 Group 1 Dr. Pooja Das            CR207
+P3     Data Structures              B.Sc Artificial Intelligence Year 2 Group 1 Dr. Aman Joshi           CR205
+P3     Digital Electronics          B.Tech Artificial Intelligence Year 1 Group 1 Dr. Priya Nair           CR201
+P4     Calculus and Linear Algebra  B.Tech Artificial Intelligence Year 1 Group 1 Dr. Ananya Sen           CR202
+P4     Data Structures              B.Sc Artificial Intelligence Year 2 Group 1 Dr. Aman Joshi           CR205
+P4     Data Management and AI Integration Bachelor of Computer Applications - Artificial Intelligence Year 2 Group 1 Dr. Neha Kapoor          CR207
+P4     Machine Learning             Bachelor of Computer Applications - Artificial Intelligence Year 3 Group 1 Dr. Nikhil Singh         ONLINE
+P4     Programming in AI            M.Tech Artificial Intelligence Year 1 Group 1 Dr. Sourav Roy           CR204
+P4     Mathematics for Computing    MCA Artificial Intelligence Year 1 Group 1 Dr. Priya Nair           CR201
+P4     Computer Organization        B.Tech Artificial Intelligence Year 2 Group 1 Dr. Sneha Roy            CR203
+P5-6   Machine Learning Laboratory  B.Tech Artificial Intelligence Year 3 Group 1 Batch 1 Sourav Das               LAB303
+P5-6   Artificial Intelligence Laboratory B.Tech Artificial Intelligence Year 4 Group 1 Batch 1 Aman Gupta               LAB301
+P5     Algorithms                   B.Sc Artificial Intelligence Year 2 Group 1 Dr. Tanvi Rao            CR201
+P5     Programming in AI            M.Tech Artificial Intelligence Year 1 Group 1 Dr. Sourav Roy           CR205
+P5     Advanced Machine Learning    M.Tech Artificial Intelligence Year 2 Group 1 Dr. Aman Joshi           CR206
+P5     Data Science and Analytics   MCA Artificial Intelligence Year 1 Group 1 Dr. Rahul Mehta          LH104
+P6     Data Structures              B.Sc Artificial Intelligence Year 2 Group 1 Dr. Aman Joshi           CR203
+P6     Computer Fundamentals        Bachelor of Computer Applications - Artificial Intelligence Year 1 Group 1 Dr. Vikram Bose          CR201
+P6-7   Advanced Programming Laboratory Bachelor of Computer Applications - Artificial Intelligence Year 3 Group 1 Batch 2 Madhurima Sen            LAB302
+P6     Mathematics for Computing    M.Tech Artificial Intelligence Year 1 Group 1 Dr. Riya Mukherjee       ONLINE
+P6     Natural Language Processing  M.Tech Artificial Intelligence Year 2 Group 1 Dr. Tanvi Rao            CR208
+P7-8   Web Technologies Laboratory  B.Sc Artificial Intelligence Year 2 Group 1 Batch 2 Ishita Banerjee          LAB304
+P7-8   Data Science Laboratory      B.Sc Artificial Intelligence Year 3 Group 1 Batch 2 Pooja Mukherjee          LAB301
+P7-8   Programming Laboratory       Bachelor of Computer Applications - Artificial Intelligence Year 1 Group 1 Batch 2 Riya Singh               LAB303
+P7     Mathematics for Computing    M.Tech Artificial Intelligence Year 1 Group 1 Dr. Riya Mukherjee       ONLINE
+P7     Computer Vision              M.Tech Artificial Intelligence Year 2 Group 1 Dr. Kabir Sharma         ONLINE
+P7     Advanced Data Analytics      MCA Artificial Intelligence Year 2 Group 1 Dr. Arjun Das            CR203
+P8     Signal Theory                M.Tech Artificial Intelligence Year 1 Group 1 Dr. Pooja Das            CR202
+[5/5] Preparing timetable export data...
+[5/5] Exporting CSV...
+[5/5] CSV exported to output/timetable_master.csv
+[5/5] Exporting master Excel workbook...
+[5/5] Master Excel exported to output/timetable_master.xlsx
+[5/5] Exporting day-wise Excel workbook...
+[5/5] Day-wise Excel exported to output/timetable_by_day.xlsx
+[5/5] Exporting faculty-wise Excel workbook...
+[5/5] Faculty-wise Excel exported to output/timetable_by_faculty.xlsx
+
+Completed in 197.48s.

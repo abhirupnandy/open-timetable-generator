@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from ortools.sat.python import cp_model
 
+from app.domain.conflicts import academic_group_conflict
 from app.domain.placement import SessionPlacement
 from app.domain.problem import SchedulingProblem
 from app.domain.room_assignment import RoomAssignment
@@ -95,20 +96,18 @@ def _add_academic_group_constraints(
     model: cp_model.CpModel,
     candidate_domains: dict[str, tuple[SchedulingCandidate, ...]],
     candidate_variables: dict[str, list[cp_model.IntVar]],
+    academic_group_parent_ids: dict[int, int | None] | None,
 ) -> None:
-    """Prevent overlapping sessions assigned to the same academic group."""
+    """Prevent overlapping sessions with overlapping student populations."""
 
     def conflicts(
         first: SchedulingCandidate,
         second: SchedulingCandidate,
     ) -> bool:
-        return (
-            first.placement.session.academic_group_id
-            == second.placement.session.academic_group_id
-            and _placements_overlap(
-                first.placement,
-                second.placement,
-            )
+        return academic_group_conflict(
+            first.placement,
+            second.placement,
+            academic_group_parent_ids,
         )
 
     _add_pairwise_candidate_conflict_constraints(
@@ -180,6 +179,7 @@ def solve(problem: SchedulingProblem) -> SolverResult:
         model,
         candidate_domains,
         candidate_variables,
+        problem.timetable_input.academic_group_parent_ids,
     )
 
     _add_room_constraints(
