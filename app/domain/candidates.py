@@ -1,8 +1,29 @@
 from __future__ import annotations
 
+from app.domain.calendar import Day
 from app.domain.placement import SessionPlacement
 from app.domain.time_slots import valid_start_periods
 from app.domain.timetable import TimetableInput
+
+# Monday Period 6 is the university-wide TREP / common activity period.
+# No classes may occupy this period.
+BLOCKED_DAY = Day.MONDAY
+BLOCKED_PERIOD = 6
+
+
+def _occupies_blocked_period(
+    placement: SessionPlacement,
+) -> bool:
+    """Return whether a placement occupies the university-wide blocked period."""
+
+    if placement.day != BLOCKED_DAY:
+        return False
+
+    return (
+        placement.start_period
+        <= BLOCKED_PERIOD
+        <= placement.end_period
+    )
 
 
 def candidate_placements(
@@ -30,6 +51,14 @@ def candidate_placements(
         )
         for day in timetable_input.days
         for start_period in start_periods
+    )
+
+    # Monday Period 6 is unavailable to everyone because of the
+    # university-wide TREP / common activity period.
+    placements = (
+        placement
+        for placement in placements
+        if not _occupies_blocked_period(placement)
     )
 
     faculty_availability = (

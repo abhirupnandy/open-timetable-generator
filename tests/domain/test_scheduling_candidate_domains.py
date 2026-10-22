@@ -78,9 +78,36 @@ def test_build_scheduling_candidate_domains_returns_physical_candidates():
 
     candidates = result["assignment:1:session:1"]
 
-    assert len(candidates) == 5
-    assert all(isinstance(candidate, SchedulingCandidate) for candidate in candidates)
-    assert all(candidate.room is not None for candidate in candidates)
+    # A 2-period session in six periods normally has five possible starts:
+    #
+    # P1-P2
+    # P2-P3
+    # P3-P4
+    # P4-P5
+    # P5-P6
+    #
+    # Monday P6 is globally blocked, so P5-P6 is invalid.
+    assert len(candidates) == 4
+
+    assert all(
+        isinstance(candidate, SchedulingCandidate)
+        for candidate in candidates
+    )
+
+    assert all(
+        candidate.room is not None
+        for candidate in candidates
+    )
+
+    assert all(
+        candidate.placement.day == Day.MONDAY
+        for candidate in candidates
+    )
+
+    assert all(
+        6 not in candidate.placement.occupied_periods
+        for candidate in candidates
+    )
 
 
 def test_build_scheduling_candidate_domains_returns_online_candidate_without_room():
@@ -91,8 +118,17 @@ def test_build_scheduling_candidate_domains_returns_online_candidate_without_roo
 
     candidates = result["assignment:1:session:1"]
 
-    assert len(candidates) == 5
-    assert all(candidate.room is None for candidate in candidates)
+    assert len(candidates) == 4
+
+    assert all(
+        candidate.room is None
+        for candidate in candidates
+    )
+
+    assert all(
+        6 not in candidate.placement.occupied_periods
+        for candidate in candidates
+    )
 
 
 def test_build_scheduling_candidate_domains_keeps_valid_placements_when_one_room_is_unavailable():
@@ -111,14 +147,27 @@ def test_build_scheduling_candidate_domains_keeps_valid_placements_when_one_room
         ),
     }
 
-    problem = make_problem(room_availability=availability)
+    problem = make_problem(
+        room_availability=availability,
+    )
 
     result = build_scheduling_candidate_domains(problem)
 
     candidates = result["assignment:1:session:1"]
 
-    assert len(candidates) == 2
-    assert all(candidate.room == room for candidate in candidates)
+    # P4-P5 is valid.
+    #
+    # P5-P6 would otherwise be inside the room availability window,
+    # but P6 is globally blocked, so it must not be generated.
+    assert len(candidates) == 1
+
+    assert all(
+        candidate.room == room
+        for candidate in candidates
+    )
+
+    assert candidates[0].placement.start_period == 4
+    assert candidates[0].placement.end_period == 5
 
 
 def test_build_scheduling_candidate_domains_raises_when_no_room_is_available():
@@ -137,7 +186,9 @@ def test_build_scheduling_candidate_domains_raises_when_no_room_is_available():
         ),
     }
 
-    problem = make_problem(room_availability=availability)
+    problem = make_problem(
+        room_availability=availability,
+    )
 
     try:
         build_scheduling_candidate_domains(problem)

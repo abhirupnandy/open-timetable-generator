@@ -24,17 +24,16 @@ def test_seeded_database_produces_timetable() -> None:
 
     result = solve(problem)
 
-    assert len(teaching_assignments) == 50
-    assert len(timetable_input.sessions) == 99
-    assert len(result.timetable.placements) == 99
+    assert len(teaching_assignments) == 80
+    assert len(timetable_input.sessions) == 173
+    assert len(result.timetable.placements) == 173
 
     session_ids = {
         placement.session.id
         for placement in result.timetable.placements
     }
 
-    assert len(session_ids) == 99
-
+    assert len(session_ids) == 173
 
 
 def test_seeded_timetable_builds_view_entries() -> None:
@@ -49,14 +48,14 @@ def test_seeded_timetable_builds_view_entries() -> None:
             result.timetable,
         )
 
-    assert len(entries) == 99
+    assert len(entries) == 173
 
     session_ids = {
         entry.session_id
         for entry in entries
     }
 
-    assert len(session_ids) == 99
+    assert len(session_ids) == 173
 
     for entry in entries:
         assert entry.subject_name

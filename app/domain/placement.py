@@ -2,7 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from app.domain.timetable import Day, SchedulingSession
+from app.domain.calendar import (
+    Day,
+    period_end_minutes,
+    period_start_minutes,
+)
+from app.domain.timetable import SchedulingSession
 
 
 @dataclass(frozen=True)
@@ -16,17 +21,32 @@ class SessionPlacement:
     @property
     def end_period(self) -> int:
         """Return the final period occupied by the session."""
+
         return self.start_period + self.session.duration_periods - 1
 
     @property
     def occupied_periods(self) -> tuple[int, ...]:
         """Return all periods occupied by the session."""
+
         return tuple(
             range(
                 self.start_period,
                 self.end_period + 1,
             )
         )
+
+    @property
+    def start_time_minutes(self) -> int:
+        """Return the wall-clock start time in minutes from midnight."""
+
+        return period_start_minutes(self.start_period)
+
+    @property
+    def end_time_minutes(self) -> int:
+        """Return the wall-clock end time in minutes from midnight."""
+
+        return period_end_minutes(self.end_period)
+
 
 def is_valid_placement(
     placement: SessionPlacement,
@@ -49,6 +69,7 @@ def is_valid_placement(
         return False
 
     return placement.end_period <= periods_per_day
+
 
 def placements_overlap(
     first: SessionPlacement,

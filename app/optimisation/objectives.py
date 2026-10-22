@@ -192,3 +192,91 @@ def build_student_group_gap_objective(
                 )
 
     return sum(gap_variables)
+
+
+def build_subject_spreading_objective(
+    model: cp_model.CpModel,
+    candidate_domains: dict[str, tuple[SchedulingCandidate, ...]],
+    candidate_variables: dict[str, list[cp_model.IntVar]],
+    *,
+    days,
+) -> cp_model.LinearExpr:
+    """
+    Return the S4 subject-spreading penalty.
+
+    For each subject + academic group + day:
+
+        penalty = number_of_sessions_on_day - day_used
+
+    where ``day_used`` is 1 when at least one session of the subject
+    for the academic group is scheduled on that day, otherwise 0.
+
+    Therefore:
+
+        1 session on a day -> 0 penalty
+        2 sessions on a day -> 1 penalty
+        3 sessions on a day -> 2 penalty
+
+    The objective is the sum of these penalties across all
+    subject/group/day combinations.
+
+    A multi-period session is counted once because its candidate
+    variable represents the entire session placement.
+    """
+
+    subject_group_pairs = {
+        (
+            candidate.placement.session.subject_id,
+            candidate.placement.session.academic_group_id,
+        )
+        for candidates in candidate_domains.values()
+        for candidate in candidates
+    }
+
+    penalty_variables: list[cp_model.IntVar] = []
+
+    for subject_id, group_id in sorted(subject_group_pairs):
+        for day in days:
+            occurrence_variables: list[cp_model.IntVar] = []
+
+            for session_id, candidates in candidate_domains.items():
+                for index, candidate in enumerate(candidates):
+                    session = candidate.placement.session
+
+                    if session.subject_id != subject_id:
+                        continue
+
+                    if session.academic_group_id != group_id:
+                        continue
+
+                    if candidate.placement.day != day:
+                        continue
+
+                    occurrence_variables.append(
+                        candidate_variables[session_id][index]
+                    )
+
+            if not occurrence_variables:
+                continue
+
+            day_used = model.new_bool_var(
+                f"subject:{subject_id}:group:{group_id}:"
+                f"day:{day.value}:used"
+            )
+
+            model.add_max_equality(day_used, occurrence_variables)
+
+            occurrence_count = sum(occurrence_variables)
+
+            penalty = model.new_int_var(
+                0,
+                len(occurrence_variables),
+                f"subject:{subject_id}:group:{group_id}:"
+                f"day:{day.value}:spread_penalty",
+            )
+
+            model.add(penalty == occurrence_count - day_used)
+
+            penalty_variables.append(penalty)
+
+    return sum(penalty_variables)

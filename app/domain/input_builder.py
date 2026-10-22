@@ -26,6 +26,8 @@ def build_timetable_input(
     periods_per_day: int = DEFAULT_PERIODS_PER_DAY,
     academic_group_capacities: dict[int, int] | None = None,
     academic_group_parent_ids: dict[int, int | None] | None = None,
+    faculty_designations: dict[int, str] | None = None,
+    faculty_time_preferences: dict[int, str] | None = None,
     faculty_availability: dict[int, ResourceAvailability] | None = None,
     room_availability: dict[int, ResourceAvailability] | None = None,
     rooms: tuple[SchedulingRoom, ...] | None = None,
@@ -45,6 +47,11 @@ def build_timetable_input(
         for session in expand_teaching_assignment(
             teaching_assignment_id=assignment.id,
             subject_id=assignment.subject_id,
+            subject_type=(
+                assignment.subject.subject_type
+                if assignment.subject is not None
+                else None
+            ),
             course_id=assignment.course_id,
             academic_group_id=assignment.academic_group_id,
             faculty_id=assignment.faculty_id,
@@ -61,6 +68,8 @@ def build_timetable_input(
         sessions=sessions,
         academic_group_capacities=academic_group_capacities,
         academic_group_parent_ids=academic_group_parent_ids,
+        faculty_designations=faculty_designations,
+        faculty_time_preferences=faculty_time_preferences,
         faculty_availability=faculty_availability,
         room_availability=room_availability,
         rooms=rooms,

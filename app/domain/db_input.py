@@ -3,7 +3,7 @@ from __future__ import annotations
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.db.models import AcademicGroup, Room, TeachingAssignment
+from app.db.models import AcademicGroup, Faculty, Room, TeachingAssignment
 from app.domain.input_builder import build_timetable_input
 from app.domain.room import SchedulingRoom
 from app.domain.timetable import TimetableInput
@@ -22,6 +22,14 @@ def build_timetable_input_from_db(db: Session) -> TimetableInput:
         db.scalars(
             select(AcademicGroup).where(
                 AcademicGroup.is_active.is_(True)
+            )
+        ).all()
+    )
+
+    faculty = tuple(
+        db.scalars(
+            select(Faculty).where(
+                Faculty.is_active.is_(True)
             )
         ).all()
     )
@@ -45,6 +53,16 @@ def build_timetable_input_from_db(db: Session) -> TimetableInput:
         for group in groups
     }
 
+    faculty_designations = {
+        member.id: member.designation.value
+        for member in faculty
+    }
+
+    faculty_time_preferences = {
+        member.id: member.time_preference.value
+        for member in faculty
+    }
+
     scheduling_rooms = tuple(
         SchedulingRoom(
             id=room.id,
@@ -59,5 +77,7 @@ def build_timetable_input_from_db(db: Session) -> TimetableInput:
         teaching_assignments,
         academic_group_capacities=academic_group_capacities,
         academic_group_parent_ids=academic_group_parent_ids,
+        faculty_designations=faculty_designations,
+        faculty_time_preferences=faculty_time_preferences,
         rooms=scheduling_rooms,
     )

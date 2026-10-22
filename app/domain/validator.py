@@ -31,6 +31,7 @@ class ValidationResult:
 
 def validate_timetable(
     timetable: Timetable,
+    academic_group_parent_ids: dict[int, int | None] | None = None,
 ) -> ValidationResult:
     """Validate all placements in a candidate timetable."""
 
@@ -38,7 +39,11 @@ def validate_timetable(
 
     for index, first in enumerate(timetable.placements):
         for second in timetable.placements[index + 1 :]:
-            reasons = hard_conflict_reasons(first, second)
+            reasons = hard_conflict_reasons(
+                first,
+                second,
+                academic_group_parent_ids,
+            )
 
             if reasons:
                 conflicts.append(

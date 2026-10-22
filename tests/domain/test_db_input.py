@@ -17,11 +17,41 @@ def test_build_timetable_input_from_seeded_database() -> None:
             ).all()
         )
 
-    assert len(assignments) == 50
-    assert len(timetable_input.sessions) == 99
-    assert len(timetable_input.rooms or ()) == 15
-    assert len(timetable_input.academic_group_capacities or {}) == 33
+    assert len(assignments) == 80
+    assert len(timetable_input.sessions) == 173
+    assert len(timetable_input.rooms or ()) == 16
+    assert len(timetable_input.academic_group_capacities or {}) == 48
 
-    assert all(session.duration_periods > 0 for session in timetable_input.sessions)
-    assert all(session.faculty_id > 0 for session in timetable_input.sessions)
-    assert all(session.academic_group_id > 0 for session in timetable_input.sessions)
+    assert all(
+        session.duration_periods > 0
+        for session in timetable_input.sessions
+    )
+
+    assert all(
+        session.faculty_id > 0
+        for session in timetable_input.sessions
+    )
+
+    assert all(
+        session.academic_group_id > 0
+        for session in timetable_input.sessions
+    )
+
+    assert timetable_input.faculty_designations is not None
+    assert len(timetable_input.faculty_designations) > 0
+
+    assert all(
+        faculty_id > 0
+        for faculty_id in timetable_input.faculty_designations
+    )
+
+    assert all(
+        designation
+        in {
+            "PROFESSOR",
+            "ASSOCIATE_PROFESSOR",
+            "ASSISTANT_PROFESSOR",
+            "PHD_SCHOLAR",
+        }
+        for designation in timetable_input.faculty_designations.values()
+    )

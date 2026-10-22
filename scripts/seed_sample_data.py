@@ -20,7 +20,6 @@ from app.db.models import (
 )
 from app.db.session import SessionLocal
 
-
 # ============================================================================
 # Seed configuration
 # ============================================================================
@@ -1427,7 +1426,7 @@ def seed() -> None:
         for course_code, years in PROGRAMME_YEARS.items():
             course = courses_by_code[course_code]
 
-            for year, (group_capacity, batch_capacity) in years.items():
+            for year, (group_capacity, _batch_capacity) in years.items():
                 group = AcademicGroup(
                     code=f"{course_code}-Y{year}-G1",
                     name=f"{course.name} Year {year} Group 1",
@@ -1512,11 +1511,11 @@ def seed() -> None:
         print(f"Schools:             {db.query(School).count()}")
         print(f"Courses:             {db.query(Course).count()}")
         print(f"Faculty:             {db.query(Faculty).count()}")
-        print(f"  Regular faculty:  18")
-        print(f"  PhD scholars:     10")
+        print("  Regular faculty:  18")
+        print("  PhD scholars:     10")
         print(f"Rooms:               {db.query(Room).count()}")
-        print(f"  Teaching rooms:   12")
-        print(f"  Computer labs:     4")
+        print("  Teaching rooms:   12")
+        print("  Computer labs:     4")
         print(f"Subjects:            {db.query(Subject).count()}")
         print(f"Academic groups:     {db.query(AcademicGroup).count()}")
         print(f"Teaching assignments:{db.query(TeachingAssignment).count()}")

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from app.db.models.subject import SubjectType
 from app.domain.timetable import SchedulingSession
 
 
@@ -7,6 +8,7 @@ def expand_teaching_assignment(
     *,
     teaching_assignment_id: int,
     subject_id: int,
+    subject_type: SubjectType | None = None,
     course_id: int,
     academic_group_id: int,
     faculty_id: int,
@@ -35,6 +37,7 @@ def expand_teaching_assignment(
             mode=mode,
             required_room_type=required_room_type,
             session_number=session_number,
+            subject_type=subject_type,
         )
         for session_number in range(1, sessions_per_week + 1)
     )

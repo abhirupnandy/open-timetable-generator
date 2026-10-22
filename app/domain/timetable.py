@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from app.db.models import SubjectType
 from app.domain.calendar import Day
 from app.domain.resource_availability import ResourceAvailability
 from app.domain.room import SchedulingRoom
@@ -25,6 +26,7 @@ class SchedulingSession:
     mode: str
     required_room_type: str | None
     session_number: int
+    subject_type: SubjectType | None = None
 
 
 @dataclass(frozen=True)
@@ -34,6 +36,8 @@ class TimetableInput:
     sessions: tuple[SchedulingSession, ...]
     academic_group_capacities: dict[int, int] | None = None
     academic_group_parent_ids: dict[int, int | None] | None = None
+    faculty_designations: dict[int, str] | None = None
+    faculty_time_preferences: dict[int, str] | None = None
     faculty_availability: dict[int, ResourceAvailability] | None = None
     room_availability: dict[int, ResourceAvailability] | None = None
     rooms: tuple[SchedulingRoom, ...] | None = None
