@@ -26,6 +26,7 @@ Institutional timetable-generation backend: FastAPI/SQLAlchemy API and database,
 - pytest-asyncio
 - httpx
 - Ruff
+- Node.js 20+ (frontend): React 19, TypeScript, Vite, TanStack Query, React Router, Vitest
 
 ## Project structure
 
@@ -42,7 +43,10 @@ open-timetable-generator/
 │   ├── export/            # CSV / Excel exporters
 │   ├── optimisation/      # CP-SAT model, constraints, penalty calculators, score report
 │   ├── schemas/
+│   ├── frontend.py        # serves frontend/dist with SPA fallback
 │   └── run_timetable.py   # command-line timetable generation
+├── frontend/              # React + TypeScript web UI (Vite)
+│   └── src/{pages,components,lib}
 ├── config/
 │   └── timetable.toml     # calendar, solver and constraint configuration
 ├── tests/
@@ -114,6 +118,7 @@ uv run uvicorn app.main:app --reload
 
 Then open:
 
+- Web UI: http://127.0.0.1:8000/
 - Swagger UI: http://127.0.0.1:8000/docs
 - ReDoc: http://127.0.0.1:8000/redoc
 - OpenAPI JSON: http://127.0.0.1:8000/openapi.json
@@ -136,6 +141,38 @@ uv run python -m app.db.seed          # or: uv run python scripts/seed_sample_da
 ```
 
 The seed creates one school with B.Tech, B.Sc, BCA, M.Tech, MCA and M.Sc AI programmes: 16 programme-year groups with two lab batches each (48 groups), 28 faculty, 16 rooms, 64 subjects and 80 teaching assignments (173 weekly sessions).
+
+## Web UI
+
+The frontend is a React + TypeScript app in `frontend/`, built with Vite. It uses React Router for pages and TanStack Query for data fetching and polling. FastAPI serves the production build, so one server hosts both the API and the UI.
+
+```bash
+cd frontend
+npm install
+npm run build          # writes frontend/dist, served by FastAPI at /
+cd ..                  # back to the repository root
+uv run uvicorn app.main:app --reload
+```
+
+Start uvicorn from the repository root. From `frontend/` Python can't import the project's `app` package (`ModuleNotFoundError: No module named 'app'`). Don't fix that error by installing a package named `app`: unrelated PyPI packages (for example `myapplication`) provide a top-level `app` module that shadows this project.
+
+For frontend development with hot reload, run FastAPI on :8000 and the Vite dev server alongside it. Vite proxies `/api` to FastAPI:
+
+```bash
+cd frontend && npm run dev      # http://localhost:5173
+```
+
+Other scripts: `npm test` (Vitest + Testing Library) and `npm run typecheck`. If `frontend/dist` doesn't exist, `/` shows how to build it. Client-side routes such as `/timetable` fall back to `index.html`.
+
+Pages:
+
+- **Overview**: record counts, weekly demand and the latest run.
+- **Data**: list, filter, sort, add, edit and delete every resource, including unavailability, group blocked slots and session locks.
+- **Generate**: start a solve with a time limit, watch progress, then see the headline metrics, the score report (independent calculator vs solver) and download links for every export.
+- **Timetable**: days x periods grid per group (including parent and batch sessions), faculty member or room, with lunch and blocked slots marked. The grid is print-friendly.
+- **Constraints**: read-only view of `config/timetable.toml`.
+
+Solving runs in a background thread through `POST /api/v1/timetable/runs`, and the UI polls `GET /api/v1/timetable/runs/{id}`. Only one run can be active at a time. Runs are kept in memory, and their export files go to `output/runs/<id>/`.
 
 ## Generate a timetable
 
@@ -179,8 +216,9 @@ All CRUD endpoints are under `/api/v1`:
 - `/unavailability` (faculty/room unavailable period ranges; shared rooms record external bookings here)
 - `/group-blocked-slots` (e.g. Year 1 sports, applies to the group and its batches)
 - `/session-locks` (pin a session to a day/start period and optionally a room)
+- `/timetable/config`, `/timetable/runs`, `/timetable/runs/{id}`, `/timetable/runs/{id}/files/{name}` (solve runs; not CRUD)
 
-Each provides GET list, POST create, GET by ID, PATCH by ID and DELETE by ID.
+Each CRUD resource provides GET list, POST create, GET by ID, PATCH by ID and DELETE by ID.
 
 ## Configuration
 

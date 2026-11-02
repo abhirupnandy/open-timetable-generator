@@ -13,13 +13,22 @@ def build_timetable_view_entries(
 ) -> tuple[TimetableViewEntry, ...]:
     """Build human-readable entries from the canonical timetable."""
 
+    return view_entries_from_metadata(load_render_metadata(db), timetable)
+
+
+def view_entries_from_metadata(
+    metadata: tuple,
+    timetable: Timetable,
+) -> tuple[TimetableViewEntry, ...]:
+    """Build view entries from preloaded ``load_render_metadata`` output."""
+
     (
         subject_names,
         group_metadata,
         faculty_names,
         room_names,
         course_metadata,
-    ) = load_render_metadata(db)
+    ) = metadata
 
     room_by_session_id = {
         assignment.placement.session.id: assignment.room.id
