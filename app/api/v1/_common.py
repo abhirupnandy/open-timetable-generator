@@ -1,8 +1,11 @@
 from datetime import UTC, datetime
+from functools import lru_cache
 
 from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+
+from app.core.timetable_config import TimetableConfig, load_timetable_config
 
 
 def now_utc() -> datetime:
@@ -29,3 +32,14 @@ def commit_or_conflict(db: Session) -> None:
         raise HTTPException(
             status_code=409, detail="Resource conflicts with existing data or references"
         ) from exc
+
+
+@lru_cache
+def _cached_timetable_config() -> TimetableConfig:
+    return load_timetable_config()
+
+
+def get_timetable_config() -> TimetableConfig:
+    """FastAPI dependency returning the timetable configuration."""
+
+    return _cached_timetable_config()

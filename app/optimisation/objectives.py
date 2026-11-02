@@ -1,133 +1,124 @@
 from __future__ import annotations
 
+from collections import defaultdict
+from collections.abc import Hashable, Sequence
+
 from ortools.sat.python import cp_model
 
 from app.domain.scheduling_candidate import SchedulingCandidate
 
+# ---------------------------------------------------------------------------
+# Reusable patterns
+# ---------------------------------------------------------------------------
 
-def _add_occupied_period_variable(
+
+def _key_name(key: Hashable) -> str:
+    if isinstance(key, tuple):
+        return ":".join(str(part) for part in key)
+    return str(key)
+
+
+def add_prefix_suffix(
     model: cp_model.CpModel,
-    *,
-    group_id: int,
-    day,
-    period: int,
+    occupied: Sequence[cp_model.IntVar],
+    name: str,
+) -> tuple[list, list]:
+    """Return ``(before, after)`` lists for a row of occupancy Booleans.
+
+    ``before[i]`` is 1 when any period strictly before index ``i`` is
+    occupied; ``after[i]`` is 1 when any period strictly after ``i`` is.
+    Built as chains, so each row costs O(periods) variables.
+    """
+
+    count = len(occupied)
+    before: list = [0] * count
+    after: list = [0] * count
+
+    for index in range(1, count):
+        if index == 1:
+            before[index] = occupied[0]
+            continue
+        var = model.new_bool_var(f"{name}:before:{index + 1}")
+        model.add_max_equality(var, [before[index - 1], occupied[index - 1]])
+        before[index] = var
+
+    for index in range(count - 2, -1, -1):
+        if index == count - 2:
+            after[index] = occupied[count - 1]
+            continue
+        var = model.new_bool_var(f"{name}:after:{index + 1}")
+        model.add_max_equality(var, [after[index + 1], occupied[index + 1]])
+        after[index] = var
+
+    return before, after
+
+
+def add_gap_penalty(
+    model: cp_model.CpModel,
+    rows: dict[Hashable, Sequence[cp_model.IntVar]],
+    name: str,
+) -> cp_model.IntVar:
+    """Total number of idle periods between the first and last occupied period.
+
+    ``rows`` maps an (entity, day) key to its ordered occupancy Booleans.
+    ``gap = not occupied AND occupied-before AND occupied-after`` exactly.
+    """
+
+    gaps: list[cp_model.IntVar] = []
+
+    for key, occupied in rows.items():
+        if len(occupied) < 3:
+            continue
+
+        row_name = f"{name}:{_key_name(key)}"
+        before, after = add_prefix_suffix(model, occupied, row_name)
+
+        for index in range(1, len(occupied) - 1):
+            gap = model.new_bool_var(f"{row_name}:gap:{index + 1}")
+            model.add_min_equality(gap, [before[index], after[index], 1 - occupied[index]])
+            gaps.append(gap)
+
+    total = model.new_int_var(0, len(gaps), name)
+    model.add(total == sum(gaps)) if gaps else model.add(total == 0)
+    return total
+
+
+def add_excess(
+    model: cp_model.CpModel,
+    expression,
+    threshold: int,
+    upper: int,
+    name: str,
+) -> cp_model.IntVar:
+    """Create ``name == max(0, expression - threshold)``."""
+
+    excess = model.new_int_var(0, max(0, upper - threshold), name)
+    model.add_max_equality(excess, [expression - threshold, 0])
+    return excess
+
+
+# ---------------------------------------------------------------------------
+# Legacy entry points (per academic group, built from candidate domains)
+# ---------------------------------------------------------------------------
+
+
+def _group_period_index(
     candidate_domains: dict[str, tuple[SchedulingCandidate, ...]],
     candidate_variables: dict[str, list[cp_model.IntVar]],
-) -> cp_model.IntVar:
-    """Create a Boolean indicating whether a group occupies a period."""
-
-    occupied = model.new_bool_var(
-        f"group:{group_id}:day:{day.value}:period:{period}:occupied"
-    )
-
-    covering_variables: list[cp_model.IntVar] = []
+) -> dict[tuple[int, object, int], list[cp_model.IntVar]]:
+    index: dict[tuple[int, object, int], list[cp_model.IntVar]] = defaultdict(list)
 
     for session_id, candidates in candidate_domains.items():
-        for index, candidate in enumerate(candidates):
-            session = candidate.placement.session
+        variables = candidate_variables[session_id]
 
-            if session.academic_group_id != group_id:
-                continue
-
+        for candidate, variable in zip(candidates, variables, strict=True):
             placement = candidate.placement
+            group_id = placement.session.academic_group_id
 
-            if placement.day != day:
-                continue
+            for period in placement.occupied_periods:
+                index[(group_id, placement.day, period)].append(variable)
 
-            if period not in placement.occupied_periods:
-                continue
-
-            covering_variables.append(candidate_variables[session_id][index])
-
-    if covering_variables:
-        model.add(occupied == sum(covering_variables))
-    else:
-        model.add(occupied == 0)
-
-    return occupied
-
-
-def _add_prefix_variable(
-    model: cp_model.CpModel,
-    *,
-    occupied_variables: tuple[cp_model.IntVar, ...],
-    end_period: int,
-    group_id: int,
-    day,
-) -> cp_model.IntVar:
-    """Create a Boolean indicating occupancy before the current period."""
-
-    prefix = model.new_bool_var(
-        f"group:{group_id}:day:{day.value}:before:{end_period + 1}"
-    )
-
-    previous_periods = occupied_variables[:end_period]
-
-    if previous_periods:
-        model.add_max_equality(prefix, list(previous_periods))
-    else:
-        model.add(prefix == 0)
-
-    return prefix
-
-
-def _add_suffix_variable(
-    model: cp_model.CpModel,
-    *,
-    occupied_variables: tuple[cp_model.IntVar, ...],
-    start_period: int,
-    group_id: int,
-    day,
-) -> cp_model.IntVar:
-    """Create a Boolean indicating occupancy after the current period."""
-
-    suffix = model.new_bool_var(
-        f"group:{group_id}:day:{day.value}:after:{start_period + 1}"
-    )
-
-    following_periods = occupied_variables[start_period:]
-
-    if following_periods:
-        model.add_max_equality(suffix, list(following_periods))
-    else:
-        model.add(suffix == 0)
-
-    return suffix
-
-
-def _add_gap_variable(
-    model: cp_model.CpModel,
-    *,
-    occupied: cp_model.IntVar,
-    prefix: cp_model.IntVar,
-    suffix: cp_model.IntVar,
-    group_id: int,
-    day,
-    period: int,
-) -> cp_model.IntVar:
-    """Create a Boolean indicating an internal free period."""
-
-    gap = model.new_bool_var(
-        f"group:{group_id}:day:{day.value}:period:{period}:gap"
-    )
-
-    model.add_bool_and(
-        [
-            prefix,
-            suffix,
-            occupied.Not(),
-        ]
-    ).only_enforce_if(gap)
-
-    model.add_bool_or(
-        [
-            prefix.Not(),
-            suffix.Not(),
-            occupied,
-        ]
-    ).only_enforce_if(gap.Not())
-
-    return gap
+    return index
 
 
 def build_student_group_gap_objective(
@@ -138,60 +129,33 @@ def build_student_group_gap_objective(
     days,
     periods_per_day: int,
 ) -> cp_model.LinearExpr:
-    """Return the total number of internal group timetable gaps."""
+    """Return the total number of internal gaps per academic group and day.
 
-    group_ids = {
-        candidate.placement.session.academic_group_id
-        for candidates in candidate_domains.values()
-        for candidate in candidates
-    }
+    The occupancy index is built in a single pass over the candidates.
+    The solver itself uses the leaf-population version in
+    ``app.optimisation.constraints``.
+    """
 
-    gap_variables: list[cp_model.IntVar] = []
+    index = _group_period_index(candidate_domains, candidate_variables)
+    group_ids = sorted({key[0] for key in index})
+    rows: dict[tuple[int, str], list[cp_model.IntVar]] = {}
 
-    for group_id in sorted(group_ids):
+    for group_id in group_ids:
         for day in days:
-            occupied_variables = tuple(
-                _add_occupied_period_variable(
-                    model,
-                    group_id=group_id,
-                    day=day,
-                    period=period,
-                    candidate_domains=candidate_domains,
-                    candidate_variables=candidate_variables,
-                )
-                for period in range(1, periods_per_day + 1)
-            )
-
+            row = []
             for period in range(1, periods_per_day + 1):
-                prefix = _add_prefix_variable(
-                    model,
-                    occupied_variables=occupied_variables,
-                    end_period=period - 1,
-                    group_id=group_id,
-                    day=day,
+                covering = index.get((group_id, day, period), [])
+                occupied = model.new_bool_var(
+                    f"group:{group_id}:day:{day.value}:period:{period}:occupied"
                 )
+                if covering:
+                    model.add(occupied == sum(covering))
+                else:
+                    model.add(occupied == 0)
+                row.append(occupied)
+            rows[(group_id, day.value)] = row
 
-                suffix = _add_suffix_variable(
-                    model,
-                    occupied_variables=occupied_variables,
-                    start_period=period,
-                    group_id=group_id,
-                    day=day,
-                )
-
-                gap_variables.append(
-                    _add_gap_variable(
-                        model,
-                        occupied=occupied_variables[period - 1],
-                        prefix=prefix,
-                        suffix=suffix,
-                        group_id=group_id,
-                        day=day,
-                        period=period,
-                    )
-                )
-
-    return sum(gap_variables)
+    return add_gap_penalty(model, rows, "s1_group_gaps")
 
 
 def build_subject_spreading_objective(
@@ -208,75 +172,47 @@ def build_subject_spreading_objective(
 
         penalty = number_of_sessions_on_day - day_used
 
-    where ``day_used`` is 1 when at least one session of the subject
-    for the academic group is scheduled on that day, otherwise 0.
-
-    Therefore:
-
-        1 session on a day -> 0 penalty
-        2 sessions on a day -> 1 penalty
-        3 sessions on a day -> 2 penalty
-
-    The objective is the sum of these penalties across all
-    subject/group/day combinations.
-
-    A multi-period session is counted once because its candidate
-    variable represents the entire session placement.
+    so one session on a day costs 0, two cost 1, three cost 2.
+    A multi-period session is counted once.
     """
 
-    subject_group_pairs = {
-        (
-            candidate.placement.session.subject_id,
-            candidate.placement.session.academic_group_id,
-        )
-        for candidates in candidate_domains.values()
-        for candidate in candidates
-    }
+    occurrences: dict[tuple[int, int, object], list[cp_model.IntVar]] = defaultdict(list)
+    allowed_days = set(days)
 
-    penalty_variables: list[cp_model.IntVar] = []
+    for session_id, candidates in candidate_domains.items():
+        for candidate, variable in zip(candidates, candidate_variables[session_id], strict=True):
+            session = candidate.placement.session
+            day = candidate.placement.day
+            if day in allowed_days:
+                occurrences[(session.subject_id, session.academic_group_id, day)].append(variable)
 
-    for subject_id, group_id in sorted(subject_group_pairs):
-        for day in days:
-            occurrence_variables: list[cp_model.IntVar] = []
+    return build_spreading_penalty(model, occurrences, {}, "s4_subject_spreading")
 
-            for session_id, candidates in candidate_domains.items():
-                for index, candidate in enumerate(candidates):
-                    session = candidate.placement.session
 
-                    if session.subject_id != subject_id:
-                        continue
+def build_spreading_penalty(
+    model: cp_model.CpModel,
+    occurrences: dict[tuple[int, int, object], list[cp_model.IntVar]],
+    day_used: dict[tuple[int, int, object], cp_model.IntVar],
+    name: str,
+) -> cp_model.IntVar:
+    """``sum(count - day_used)`` over subject/group/day keys."""
 
-                    if session.academic_group_id != group_id:
-                        continue
+    penalties: list[cp_model.IntVar] = []
+    upper = 0
 
-                    if candidate.placement.day != day:
-                        continue
+    for key in sorted(occurrences, key=lambda item: (item[0], item[1], str(item[2]))):
+        variables = occurrences[key]
+        used = day_used.get(key)
 
-                    occurrence_variables.append(
-                        candidate_variables[session_id][index]
-                    )
+        if used is None:
+            used = model.new_bool_var(f"{name}:{_key_name(key)}:used")
+            model.add_max_equality(used, variables)
 
-            if not occurrence_variables:
-                continue
+        penalty = model.new_int_var(0, len(variables), f"{name}:{_key_name(key)}")
+        model.add(penalty == sum(variables) - used)
+        penalties.append(penalty)
+        upper += len(variables)
 
-            day_used = model.new_bool_var(
-                f"subject:{subject_id}:group:{group_id}:"
-                f"day:{day.value}:used"
-            )
-
-            model.add_max_equality(day_used, occurrence_variables)
-
-            occurrence_count = sum(occurrence_variables)
-
-            penalty = model.new_int_var(
-                0,
-                len(occurrence_variables),
-                f"subject:{subject_id}:group:{group_id}:"
-                f"day:{day.value}:spread_penalty",
-            )
-
-            model.add(penalty == occurrence_count - day_used)
-
-            penalty_variables.append(penalty)
-
-    return sum(penalty_variables)
+    total = model.new_int_var(0, upper, name)
+    model.add(total == sum(penalties)) if penalties else model.add(total == 0)
+    return total

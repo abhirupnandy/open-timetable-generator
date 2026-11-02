@@ -65,3 +65,31 @@ def export_timetable_csv(
             )
 
     return output_path
+
+
+def load_previous_placements(
+    path: str | Path,
+    room_ids_by_name: dict[str, int],
+):
+    """Read a previously exported master CSV for ``stability_vs_previous``.
+
+    Returns ``{session_id: PreviousPlacement}``. Online sessions (room
+    "ONLINE") and unknown room names map to ``room_id=None``.
+    """
+
+    from app.domain.calendar import Day
+    from app.domain.timetable import PreviousPlacement
+
+    path = Path(path)
+    placements: dict[str, PreviousPlacement] = {}
+
+    with path.open(newline="", encoding="utf-8") as csv_file:
+        for row in csv.DictReader(csv_file):
+            room_name = row.get("Room") or ""
+            placements[row["Session ID"]] = PreviousPlacement(
+                day=Day(row["Day"]),
+                start_period=int(row["Start Period"]),
+                room_id=room_ids_by_name.get(room_name),
+            )
+
+    return placements

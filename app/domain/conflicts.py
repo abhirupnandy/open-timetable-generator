@@ -53,13 +53,13 @@ def academic_group_conflict(
     if parent_group_ids is None:
         return False
 
-    first_ancestors = _academic_group_ancestors(
+    # Students overlap when one group is the other or one of its ancestors.
+    # Sibling batches share a parent but not students, so they do not
+    # conflict with each other.
+    return first_group_id in _academic_group_ancestors(
+        second_group_id,
+        parent_group_ids,
+    ) or second_group_id in _academic_group_ancestors(
         first_group_id,
         parent_group_ids,
     )
-    second_ancestors = _academic_group_ancestors(
-        second_group_id,
-        parent_group_ids,
-    )
-
-    return bool(first_ancestors.intersection(second_ancestors))

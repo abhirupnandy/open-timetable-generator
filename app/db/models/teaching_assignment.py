@@ -35,6 +35,8 @@ class TeachingAssignment(Base):
     duration_periods: Mapped[int] = mapped_column(Integer, nullable=False)
     mode: Mapped[AssignmentMode] = mapped_column(SQLEnum(AssignmentMode), nullable=False)
     required_room_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    # True exempts this assignment from the no_session_across_lunch rule.
+    allow_across_lunch: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

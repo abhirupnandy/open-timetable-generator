@@ -12,6 +12,7 @@ from app.domain.placement import SessionPlacement
 class HardConflictReason(StrEnum):
     FACULTY = "FACULTY"
     ACADEMIC_GROUP = "ACADEMIC_GROUP"
+    ROOM = "ROOM"
 
 
 def hard_conflict_reasons(

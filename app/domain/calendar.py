@@ -12,7 +12,9 @@ class Day(StrEnum):
     SATURDAY = "SATURDAY"
 
 
-# Timetable period start/end times expressed as minutes from midnight.
+# Fallback period start/end times (minutes from midnight), used only when a
+# TimetableInput does not carry its own ``period_times``. The calendar used
+# for real runs comes from ``config/timetable.toml``.
 #
 # P1: 08:20–09:20
 # P2: 09:25–10:25
@@ -22,7 +24,7 @@ class Day(StrEnum):
 # P6: 14:50–15:50
 # P7: 15:55–16:55
 # P8: 17:00–18:00
-PERIOD_TIMES: dict[int, tuple[int, int]] = {
+DEFAULT_PERIOD_TIMES: dict[int, tuple[int, int]] = {
     1: (8 * 60 + 20, 9 * 60 + 20),
     2: (9 * 60 + 25, 10 * 60 + 25),
     3: (10 * 60 + 30, 11 * 60 + 30),
@@ -33,20 +35,29 @@ PERIOD_TIMES: dict[int, tuple[int, int]] = {
     8: (17 * 60, 18 * 60),
 }
 
+# Backwards-compatible alias.
+PERIOD_TIMES = DEFAULT_PERIOD_TIMES
 
-def period_start_minutes(period: int) -> int:
+
+def period_start_minutes(
+    period: int,
+    period_times: dict[int, tuple[int, int]] | None = None,
+) -> int:
     """Return the timetable start time of a period in minutes from midnight."""
 
     try:
-        return PERIOD_TIMES[period][0]
+        return (period_times or DEFAULT_PERIOD_TIMES)[period][0]
     except KeyError as exc:
         raise ValueError(f"Invalid timetable period: {period}") from exc
 
 
-def period_end_minutes(period: int) -> int:
+def period_end_minutes(
+    period: int,
+    period_times: dict[int, tuple[int, int]] | None = None,
+) -> int:
     """Return the timetable end time of a period in minutes from midnight."""
 
     try:
-        return PERIOD_TIMES[period][1]
+        return (period_times or DEFAULT_PERIOD_TIMES)[period][1]
     except KeyError as exc:
         raise ValueError(f"Invalid timetable period: {period}") from exc

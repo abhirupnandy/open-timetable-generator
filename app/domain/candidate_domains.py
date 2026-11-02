@@ -8,11 +8,15 @@ from app.domain.problem import SchedulingProblem
 class EmptyCandidateDomainError(ValueError):
     """Raised when a scheduling session has no valid candidate placement."""
 
-    def __init__(self, session_id: str) -> None:
-        super().__init__(
-            f"Scheduling session has no valid candidate placements: {session_id}"
-        )
+    def __init__(self, session_id: str, reason: str | None = None) -> None:
+        message = f"Scheduling session has no valid candidate placements: {session_id}"
+
+        if reason:
+            message = f"{message} ({reason})"
+
+        super().__init__(message)
         self.session_id = session_id
+        self.reason = reason
 
 
 def build_candidate_domains(
@@ -24,7 +28,7 @@ def build_candidate_domains(
 
     for session in problem.sessions:
         placements = candidate_placements(
-            session.id,
+            session,
             problem.timetable_input,
         )
 

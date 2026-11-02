@@ -7,7 +7,7 @@ from app.domain.scheduling_candidate import SchedulingCandidate
 from app.domain.scheduling_candidate_domains import (
     build_scheduling_candidate_domains,
 )
-from app.domain.timetable import SchedulingSession, TimetableInput
+from app.domain.timetable import SchedulingSession, TimeSlot, TimetableInput
 
 
 def make_session(
@@ -53,6 +53,8 @@ def make_input(
         academic_group_capacities={30: 50},
         room_availability=room_availability,
         rooms=(make_room(),),
+        # University-wide TREP block (configured in config/timetable.toml).
+        blocked_slots=(TimeSlot(day=Day.MONDAY, period=6),),
     )
 
 

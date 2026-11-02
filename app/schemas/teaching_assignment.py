@@ -14,6 +14,7 @@ class TeachingAssignmentCreate(BaseModel):
     duration_periods: int = Field(gt=0)
     mode: AssignmentMode
     required_room_type: str | None = Field(default=None, max_length=50)
+    allow_across_lunch: bool | None = None
     is_active: bool = True
 
 
@@ -26,6 +27,7 @@ class TeachingAssignmentUpdate(BaseModel):
     duration_periods: int | None = Field(default=None, gt=0)
     mode: AssignmentMode | None = None
     required_room_type: str | None = Field(default=None, max_length=50)
+    allow_across_lunch: bool | None = None
     is_active: bool | None = None
 
 
@@ -40,6 +42,7 @@ class TeachingAssignmentResponse(BaseModel):
     duration_periods: int
     mode: AssignmentMode
     required_room_type: str | None
+    allow_across_lunch: bool | None = None
     is_active: bool
     created_at: datetime
     updated_at: datetime
