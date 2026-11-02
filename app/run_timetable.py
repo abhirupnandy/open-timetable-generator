@@ -1,35 +1,36 @@
 from __future__ import annotations
 
+import argparse
+import sys
 import threading
 import time
 from pathlib import Path
-from types import SimpleNamespace
 
+from app.core.timetable_config import TimetableConfigError, load_timetable_config
 from app.db.session import SessionLocal
 from app.domain.db_input import build_timetable_input_from_db
 from app.domain.db_render_data import load_render_metadata
+from app.domain.diagnostics import PreSolveError
 from app.domain.problem import SchedulingProblem
 from app.domain.render import render_timetable
 from app.domain.timetable_view_builder import build_timetable_view_entries
 from app.domain.validator import validate_timetable
-from app.export.csv_export import export_timetable_csv
+from app.export.csv_export import export_timetable_csv, load_previous_placements
 from app.export.excel_export import (
     export_day_workbook,
     export_faculty_workbook,
+    export_grid_workbook,
     export_master_workbook,
 )
-from app.optimisation.evaluation import calculate_student_group_gaps
-from app.optimisation.faculty_time_preferences import (
-    calculate_s3_penalty,
+from app.optimisation.score_report import (
+    build_score_report,
+    format_score_report,
+    headline_metrics,
+    score_report_payload,
+    summary_sheet_rows,
+    write_score_report,
 )
-from app.optimisation.faculty_workload import calculate_s2_penalty
-from app.optimisation.solver import solve
-from app.optimisation.student_free_periods import (
-    calculate_student_free_period_penalty,
-)
-from app.optimisation.theory_sessions import (
-    calculate_theory_sessions_penalty,
-)
+from app.optimisation.solver import InfeasibleTimetableError, solve
 
 
 def _show_solver_progress(stop_event: threading.Event) -> None:
@@ -44,44 +45,52 @@ def _show_solver_progress(stop_event: threading.Event) -> None:
         )
 
 
-def _calculate_faculty_workloads(
-    timetable,
-) -> tuple[SimpleNamespace, ...]:
-    """
-    Build faculty workload records from the generated timetable.
+def _peak_memory_mb() -> float | None:
+    try:
+        import resource
+    except ImportError:  # pragma: no cover - not available on Windows
+        return None
 
-    Each timetable period represents one teaching hour. Multi-period
-    sessions therefore contribute their full duration.
-    """
-    teaching_hours: dict[int, int] = {}
+    peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    # Linux reports KiB, macOS reports bytes.
+    return peak / (1024 * 1024) if sys.platform == "darwin" else peak / 1024
 
-    for placement in timetable.placements:
-        faculty_id = placement.session.faculty_id
-        duration = placement.session.duration_periods
 
-        teaching_hours[faculty_id] = (
-            teaching_hours.get(faculty_id, 0)
-            + duration
-        )
-
-    return tuple(
-        SimpleNamespace(
-            faculty_id=faculty_id,
-            designation=designation,
-            teaching_hours=teaching_hours.get(faculty_id, 0),
-        )
-        for faculty_id, designation in timetable.faculty_designations.items()
+def _parse_args(argv: list[str] | None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Generate a timetable with CP-SAT.")
+    parser.add_argument(
+        "--config",
+        type=Path,
+        default=None,
+        help="Path to the timetable TOML config (default: config/timetable.toml).",
     )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path("output"),
+        help="Directory for CSV/Excel/JSON outputs (default: output).",
+    )
+    return parser.parse_args(argv)
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> int:
+    args = _parse_args(argv)
     total_start = time.perf_counter()
+
+    try:
+        config = load_timetable_config(args.config)
+    except TimetableConfigError as exc:
+        print(exc, file=sys.stderr)
+        return 2
+
+    print("Configuration:", flush=True)
+    for line in config.summary_lines():
+        print(f"  {line}")
+    print()
 
     print("[1/5] Loading timetable data from database...", flush=True)
 
     with SessionLocal() as db:
-        timetable_input = build_timetable_input_from_db(db)
-
         (
             subject_names,
             group_metadata,
@@ -90,10 +99,34 @@ def main() -> None:
             course_metadata,
         ) = load_render_metadata(db)
 
-    group_names = {
-        group_id: name
-        for group_id, (_, name) in group_metadata.items()
-    }
+        previous_placements = None
+        stability = config.soft.stability_vs_previous
+
+        if stability.enabled:
+            previous_path = Path(stability.previous_timetable)
+            if previous_path.exists():
+                previous_placements = load_previous_placements(
+                    previous_path,
+                    {name: room_id for room_id, name in room_names.items()},
+                )
+                print(
+                    f"[1/5] Loaded {len(previous_placements)} previous placements "
+                    f"from {previous_path}",
+                    flush=True,
+                )
+            else:
+                print(
+                    f"[1/5] stability_vs_previous: {previous_path} not found; ignoring.",
+                    flush=True,
+                )
+
+        timetable_input = build_timetable_input_from_db(
+            db,
+            config,
+            previous_placements=previous_placements,
+        )
+
+    group_names = {group_id: name for group_id, (_, name) in group_metadata.items()}
 
     print(
         f"[1/5] Loaded {len(timetable_input.sessions)} scheduling sessions "
@@ -103,68 +136,69 @@ def main() -> None:
 
     print("[2/5] Building scheduling problem...", flush=True)
 
-    problem = SchedulingProblem(
-        timetable_input=timetable_input,
-    )
-
-    print("[2/5] Scheduling problem ready.", flush=True)
+    problem = SchedulingProblem(timetable_input=timetable_input)
 
     print("[3/5] Running CP-SAT solver...", flush=True)
 
     stop_event = threading.Event()
-
     progress_thread = threading.Thread(
         target=_show_solver_progress,
         args=(stop_event,),
         daemon=True,
     )
-
-    solve_start = time.perf_counter()
-
     progress_thread.start()
 
     try:
-        result = solve(problem)
+        result = solve(problem, config)
+    except (PreSolveError, InfeasibleTimetableError) as exc:
+        print(f"\n{exc}", file=sys.stderr, flush=True)
+        return 1
     finally:
         stop_event.set()
         progress_thread.join()
 
-    solve_elapsed = time.perf_counter() - solve_start
+    for diagnostic in result.diagnostics:
+        print(f"[3/5] {diagnostic}", flush=True)
 
+    peak = _peak_memory_mb()
     print(
-        f"[3/5] Solver finished in {solve_elapsed:.2f}s.",
+        f"[3/5] Solver finished: status={result.status}, "
+        f"objective={result.objective_value}, bound={result.best_bound}, "
+        f"build={result.build_time_seconds:.2f}s, solve={result.wall_time_seconds:.2f}s"
+        + (f", peak memory={peak:.0f} MB" if peak is not None else ""),
         flush=True,
     )
+    print(f"[3/5] Model: {result.model_stats}", flush=True)
 
     print("[4/5] Validating solver output...", flush=True)
 
-    validation = validate_timetable(result.timetable)
+    validation = validate_timetable(
+        result.timetable,
+        timetable_input.academic_group_parent_ids,
+        timetable_input=timetable_input,
+        config=config,
+    )
 
     if validation.is_valid:
         print("[4/5] Hard constraints: PASS", flush=True)
-        print("[4/5] Hard conflicts: 0", flush=True)
     else:
         print(
-            f"[4/5] Hard constraints: FAIL "
-            f"({len(validation.conflicts)} conflicts)",
+            f"[4/5] Hard constraints: FAIL ({len(validation.conflicts)} conflicts, "
+            f"{len(validation.violations)} violations)",
             flush=True,
         )
 
         for conflict in validation.conflicts:
-            reasons = ", ".join(
-                reason.value
-                for reason in conflict.reasons
-            )
-
+            reasons = ", ".join(reason.value for reason in conflict.reasons)
             print(
-                f"  {conflict.first_session_id} <-> "
-                f"{conflict.second_session_id}: {reasons}",
+                f"  {conflict.first_session_id} <-> {conflict.second_session_id}: {reasons}",
                 flush=True,
             )
 
-        raise RuntimeError(
-            "Generated timetable violates hard constraints."
-        )
+        for violation in validation.violations:
+            print(f"  {violation.reason.value}: {violation.message}", flush=True)
+
+        raise RuntimeError("Generated timetable violates hard constraints.")
 
     print(
         f"[4/5] Scheduled {len(result.timetable.placements)} "
@@ -173,114 +207,27 @@ def main() -> None:
     )
 
     # ------------------------------------------------------------------
-    # S1: Student-group gaps
+    # Score report
     # ------------------------------------------------------------------
 
-    s1_gaps = calculate_student_group_gaps(
-        result.timetable,
-        periods_per_day=timetable_input.periods_per_day,
-    )
+    rows = build_score_report(result, timetable_input, config)
+    metrics = headline_metrics(result.timetable, timetable_input, config)
+    payload = score_report_payload(rows, result, metrics)
 
-    print(
-        f"[4/5] Student-group gaps (S1): {s1_gaps}",
-        flush=True,
-    )
+    print()
+    print(format_score_report(rows))
+    print()
+    print("Headline metrics:")
+    for key, value in metrics.items():
+        print(f"  {key:<30} {value}")
+    print()
 
-    # ------------------------------------------------------------------
-    # S14: Minimum two free timetable periods per student group/day
-    #
-    # Lunch is outside the timetable period model and therefore
-    # is not counted as a free period.
-    # ------------------------------------------------------------------
-
-    s14_penalty = calculate_student_free_period_penalty(
-        result.timetable,
-        periods_per_day=timetable_input.periods_per_day,
-    )
-
-    print(
-        f"[4/5] Minimum free-period penalty (S14): {s14_penalty}",
-        flush=True,
-    )
-
-    # ------------------------------------------------------------------
-    # S2: Faculty workload balance
-    #
-    # Faculty teaching hours are calculated from the generated
-    # timetable. Utilisation is normalised using the faculty
-    # designation capacity.
-    # ------------------------------------------------------------------
-
-    faculty_workloads = []
-
-    for faculty_id, designation in (
-        timetable_input.faculty_designations or {}
-    ).items():
-        teaching_hours = sum(
-            placement.session.duration_periods
-            for placement in result.timetable.placements
-            if placement.session.faculty_id == faculty_id
+    if payload["mismatches"]:
+        print(
+            "WARNING: solver and independent calculator disagree for: "
+            + ", ".join(payload["mismatches"]),
+            flush=True,
         )
-
-        faculty_workloads.append(
-            type(
-                "FacultyWorkload",
-                (),
-                {
-                    "faculty_id": faculty_id,
-                    "designation": designation,
-                    "teaching_hours": teaching_hours,
-                },
-            )()
-        )
-
-    s2_penalty = calculate_s2_penalty(
-        faculty_workloads
-    )
-
-    print(
-        f"[4/5] Faculty workload balance penalty (S2): {s2_penalty}",
-        flush=True,
-    )
-
-    # ------------------------------------------------------------------
-    # S11: Maximum two theory/lecture sessions per faculty per day
-    #
-    # Only LECTURE sessions are counted.
-    # LAB and TUTORIAL sessions do not contribute to S11.
-    #
-    # The first two lecture sessions for a faculty member on a day
-    # have zero penalty. Every additional lecture session contributes
-    # one penalty point.
-    # ------------------------------------------------------------------
-
-    s11_penalty = calculate_theory_sessions_penalty(
-        result.timetable
-    )
-
-    print(
-        f"[4/5] Theory-session penalty (S11): {s11_penalty}",
-        flush=True,
-    )
-
-    # ------------------------------------------------------------------
-    # S3: Faculty time preferences
-    #
-    # Sessions scheduled outside a faculty member's preferred
-    # time range contribute one penalty per occupied period.
-    # ------------------------------------------------------------------
-
-    s3_penalty = calculate_s3_penalty(
-        result.timetable,
-        faculty_time_preferences=(
-            timetable_input.faculty_time_preferences or {}
-        ),
-    )
-
-    print(
-        f"[4/5] Faculty time-preference penalty (S3): {s3_penalty}",
-        flush=True,
-    )
 
     # ------------------------------------------------------------------
     # Rendering
@@ -300,113 +247,75 @@ def main() -> None:
     )
 
     # ------------------------------------------------------------------
-    # Export preparation
+    # Exports
     # ------------------------------------------------------------------
 
-    print(
-        "[5/5] Preparing timetable export data...",
-        flush=True,
-    )
+    print("[5/5] Preparing timetable export data...", flush=True)
 
     with SessionLocal() as db:
-        view_entries = build_timetable_view_entries(
-            db,
-            result.timetable,
+        view_entries = build_timetable_view_entries(db, result.timetable)
+
+    output_dir = args.output_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    group_codes = {group_id: code for group_id, (code, _) in group_metadata.items()}
+    group_parents = {
+        group_codes[group_id]: group_codes.get(parent_id) if parent_id is not None else None
+        for group_id, parent_id in (timetable_input.academic_group_parent_ids or {}).items()
+        if group_id in group_codes
+    }
+    day_names = [day.value for day in timetable_input.days]
+
+    exports = [
+        ("score report", lambda: write_score_report(payload, output_dir / "score_report.json")),
+        ("CSV", lambda: export_timetable_csv(view_entries, output_dir / "timetable_master.csv")),
+        (
+            "master workbook",
+            lambda: export_master_workbook(
+                view_entries,
+                output_dir / "timetable_master.xlsx",
+                summary_rows=summary_sheet_rows(payload),
+            ),
+        ),
+        (
+            "day-wise workbook",
+            lambda: export_day_workbook(view_entries, output_dir / "timetable_by_day.xlsx"),
+        ),
+        (
+            "faculty-wise workbook",
+            lambda: export_faculty_workbook(view_entries, output_dir / "timetable_by_faculty.xlsx"),
+        ),
+    ]
+
+    for by, filename in (
+        ("group", "grid_by_group.xlsx"),
+        ("faculty", "grid_by_faculty.xlsx"),
+        ("room", "grid_by_room.xlsx"),
+    ):
+        exports.append(
+            (
+                f"{by} grid workbook",
+                lambda by=by, filename=filename: export_grid_workbook(
+                    view_entries,
+                    output_dir / filename,
+                    by=by,
+                    days=day_names,
+                    periods_per_day=timetable_input.periods_per_day,
+                    group_parents=group_parents,
+                ),
+            )
         )
 
-    output_dir = Path("output")
-    output_dir.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-
-    # ------------------------------------------------------------------
-    # CSV export
-    # ------------------------------------------------------------------
-
-    print(
-        "[5/5] Exporting CSV...",
-        flush=True,
-    )
-
-    csv_path = export_timetable_csv(
-        view_entries,
-        output_dir / "timetable_master.csv",
-    )
-
-    print(
-        f"[5/5] CSV exported to {csv_path}",
-        flush=True,
-    )
-
-    # ------------------------------------------------------------------
-    # Master Excel workbook
-    # ------------------------------------------------------------------
-
-    print(
-        "[5/5] Exporting master Excel workbook...",
-        flush=True,
-    )
-
-    master_excel_path = export_master_workbook(
-        view_entries,
-        output_dir / "timetable_master.xlsx",
-    )
-
-    print(
-        f"[5/5] Master Excel exported to {master_excel_path}",
-        flush=True,
-    )
-
-    # ------------------------------------------------------------------
-    # Day-wise Excel workbook
-    # ------------------------------------------------------------------
-
-    print(
-        "[5/5] Exporting day-wise Excel workbook...",
-        flush=True,
-    )
-
-    day_excel_path = export_day_workbook(
-        view_entries,
-        output_dir / "timetable_by_day.xlsx",
-    )
-
-    print(
-        f"[5/5] Day-wise Excel exported to {day_excel_path}",
-        flush=True,
-    )
-
-    # ------------------------------------------------------------------
-    # Faculty-wise Excel workbook
-    # ------------------------------------------------------------------
-
-    print(
-        "[5/5] Exporting faculty-wise Excel workbook...",
-        flush=True,
-    )
-
-    faculty_excel_path = export_faculty_workbook(
-        view_entries,
-        output_dir / "timetable_by_faculty.xlsx",
-    )
-
-    print(
-        f"[5/5] Faculty-wise Excel exported to {faculty_excel_path}",
-        flush=True,
-    )
-
-    # ------------------------------------------------------------------
-    # Final timing
-    # ------------------------------------------------------------------
+    for label, export in exports:
+        path = export()
+        print(f"[5/5] Exported {label} to {path}", flush=True)
 
     total_elapsed = time.perf_counter() - total_start
 
     print()
-    print(
-        f"Completed in {total_elapsed:.2f}s."
-    )
+    print(f"Completed in {total_elapsed:.2f}s.")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

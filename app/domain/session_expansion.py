@@ -16,6 +16,7 @@ def expand_teaching_assignment(
     duration_periods: int,
     mode: str,
     required_room_type: str | None,
+    allow_across_lunch: bool = False,
 ) -> tuple[SchedulingSession, ...]:
     """Expand one teaching assignment into individual schedulable sessions."""
 
@@ -38,6 +39,7 @@ def expand_teaching_assignment(
             required_room_type=required_room_type,
             session_number=session_number,
             subject_type=subject_type,
+            allow_across_lunch=allow_across_lunch,
         )
         for session_number in range(1, sessions_per_week + 1)
     )

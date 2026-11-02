@@ -2,7 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.v1._common import commit_or_conflict, get_or_404, now_utc, require_exists
+from app.api.v1._common import (
+    commit_or_conflict,
+    get_or_404,
+    get_timetable_config,
+    now_utc,
+    require_exists,
+)
+from app.core.timetable_config import TimetableConfig
 from app.db.models import AcademicGroup, Course, Faculty, Subject, TeachingAssignment
 from app.db.session import get_db
 from app.schemas.teaching_assignment import (
@@ -12,6 +19,37 @@ from app.schemas.teaching_assignment import (
 )
 
 router = APIRouter(prefix="/assignments", tags=["Teaching Assignments"])
+
+
+def _check_role_restriction(
+    db: Session,
+    config: TimetableConfig,
+    faculty_id: int,
+    subject_id: int,
+) -> None:
+    """HC-9: reject assignments a faculty designation may not teach."""
+
+    restrictions = config.hard.role_restrictions
+
+    if not restrictions.enabled:
+        return
+
+    faculty = db.get(Faculty, faculty_id)
+    subject = db.get(Subject, subject_id)
+
+    if faculty is None or subject is None:
+        return
+
+    allowed = restrictions.allowed_types(faculty.designation.value)
+
+    if allowed is not None and subject.subject_type.value not in allowed:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"{faculty.designation.value} faculty may only teach "
+                f"{', '.join(sorted(allowed))}; subject is {subject.subject_type.value}"
+            ),
+        )
 
 
 @router.get("", response_model=list[TeachingAssignmentResponse])
@@ -43,6 +81,7 @@ def list_assignments(
 def create_assignment(
     payload: TeachingAssignmentCreate,
     db: Session = Depends(get_db),
+    config: TimetableConfig = Depends(get_timetable_config),
 ):
     require_exists(db, Subject, payload.subject_id, "subject_id")
     require_exists(db, Course, payload.course_id, "course_id")
@@ -59,6 +98,8 @@ def create_assignment(
             status_code=422,
             detail="Academic group must belong to the same course",
         )
+
+    _check_role_restriction(db, config, payload.faculty_id, payload.subject_id)
 
     now = now_utc()
 
@@ -88,6 +129,7 @@ def update_assignment(
     assignment_id: int,
     payload: TeachingAssignmentUpdate,
     db: Session = Depends(get_db),
+    config: TimetableConfig = Depends(get_timetable_config),
 ):
     assignment = get_or_404(db, TeachingAssignment, assignment_id)
 
@@ -122,6 +164,13 @@ def update_assignment(
             status_code=422,
             detail="Academic group must belong to the same course",
         )
+
+    _check_role_restriction(
+        db,
+        config,
+        values.get("faculty_id", assignment.faculty_id),
+        values.get("subject_id", assignment.subject_id),
+    )
 
     for key, value in values.items():
         setattr(assignment, key, value)

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 
 from ortools.sat.python import cp_model
 
@@ -13,8 +14,19 @@ FACULTY_TEACHING_CAPACITY = {
 }
 
 
+@dataclass(frozen=True)
+class FacultyWorkload:
+    """Weekly teaching hours of one faculty member."""
+
+    faculty_id: int
+    designation: str
+    teaching_hours: int
+
+
 def calculate_s2_penalty(
     faculty: Iterable[object],
+    *,
+    capacities: Mapping[str, int] | None = None,
 ) -> int:
     """
     Calculate the S2 faculty workload-balance penalty.
@@ -26,6 +38,7 @@ def calculate_s2_penalty(
     The penalty is the sum of pairwise absolute utilisation
     differences within each designation, scaled by 100.
     """
+    capacities = capacities or FACULTY_TEACHING_CAPACITY
     utilisation_by_designation: dict[str, list[float]] = defaultdict(list)
 
     for member in faculty:
@@ -36,7 +49,7 @@ def calculate_s2_penalty(
             raise ValueError("teaching_hours cannot be negative")
 
         try:
-            capacity = FACULTY_TEACHING_CAPACITY[designation]
+            capacity = capacities[designation]
         except KeyError as exc:
             raise ValueError(
                 f"Unknown faculty designation: {designation!r}"

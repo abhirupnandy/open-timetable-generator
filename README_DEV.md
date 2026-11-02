@@ -2,17 +2,19 @@
 
 ## Architecture
 
-Phase 1 uses a deliberately small dependency direction:
+Dependency direction:
 
 ```text
-FastAPI API
+FastAPI API  (app/api)
     ↓
-SQLAlchemy database/session layer
+SQLAlchemy database/session layer  (app/db)
     ↓
-Domain models
+Domain  (app/domain)  ←  config model (app/core/timetable_config.py)
+    ↓
+Optimisation  (app/optimisation, CP-SAT)
 ```
 
-Future application/service and optimisation layers will be inserted without making the optimisation engine depend on FastAPI.
+`app/domain` and `app/optimisation` must not import FastAPI. `app/run_timetable.py` is the command-line entry point.
 
 ## Domain model
 
@@ -26,7 +28,7 @@ Belongs to a School and records duration in years and total semesters. Semester-
 Belongs to a School. Designation is an enum with assistant professor, associate professor, professor and PhD scholar.
 
 ### Room
-Belongs to a School and has type, capacity and shared/private status. Room availability is deferred.
+Belongs to a School and has type, capacity and shared/private status. Unavailable periods (including external bookings of shared rooms) are stored in the `unavailability` table.
 
 ### Subject
 Standalone academic subject with lecture/lab/tutorial type. The course-subject-semester structure will be added when the timetable problem model is introduced.
@@ -35,7 +37,10 @@ Standalone academic subject with lecture/lab/tutorial type. The course-subject-s
 Represents both lecture groups and batches. A batch can reference a parent group; there is no assumption that a group has exactly two batches.
 
 ### TeachingAssignment
-Central Phase 1 input record connecting subject, course, academic group and faculty, with weekly sessions, duration, mode and required room type. Phase 1 intentionally supports one faculty and one academic group per assignment.
+Central input record connecting subject, course, academic group and faculty, with weekly sessions, duration, mode, required room type and `allow_across_lunch` (exempts it from the lunch rule). One faculty and one academic group per assignment.
+
+### Constraint inputs
+`unavailability` (FACULTY | ROOM, day, start/end period), `group_blocked_slots` (group, day, period, label) and `session_locks` (assignment, session number, day, start period, optional room). `faculty.preferred_day_off` feeds the soft constraint of the same name.
 
 ## API structure
 
@@ -84,18 +89,26 @@ The API tests cover health, CRUD, uniqueness conflicts, foreign-key validation, 
 - Prefer straightforward code over generic CRUD frameworks.
 - Keep database schema changes in Alembic.
 
-## Future optimisation engine
+## Optimisation engine
 
-The future optimisation layer should live outside `app/` so it has no dependency on FastAPI. The design calls for CP-SAT as the core solver, with greedy warm starts, staged/decomposed solving and LNS for large schools. The independent deterministic validator must remain separate from the solver model.
+Pipeline for one run (`app/optimisation/solver.py`):
 
-Do not create the optimisation directories during Phase 1. When the API/domain layer is stable, introduce the optimisation package with a one-way dependency:
+1. `run_presolve_checks` (`app/domain/diagnostics.py`): faculty hours vs weekly cap/minimum, per-leaf group demand vs free slots, room-type demand vs supply, lock conflicts, role restrictions.
+2. `build_scheduling_candidate_domains`: every (placement, room) candidate per session. Global and group blocked slots, the hard lunch rule, locks and faculty/room availability are applied here. An empty domain raises an error explaining which rule removed the last candidate.
+3. `build_model_context` (`model_context.py`): one Boolean per candidate with `exactly_one` per session. One pass builds the `faculty_slot`, `room_slot` and `population_slot` indexes and the Boolean `faculty_busy`, `group_busy` (per leaf population) and `room_busy` variables. Each busy variable equals the sum of its covering candidates, which also gives the no-overlap rules (`add_at_most_one` per slot).
+4. `apply_constraints` (`constraints.py`): optional hard rules, flexible rules and enabled soft constraints. Every soft builder returns a named `pen:<key>` IntVar. Disabled constraints add no variables.
+5. Objective = sum of weight x penalty. Solver limits come from `[solver]` in the config.
 
-```text
-API → application/services → domain → optimisation
-```
+Every penalty also has a pure-Python calculator in `penalties.py`. `score_report.py` compares calculator and solver values and flags mismatches, which indicate modelling bugs. `app/domain/validator.py` checks every hard rule without solver variables.
 
-The optimisation code must be usable without importing FastAPI.
+### Adding a constraint
 
-## Why optimisation is not implemented yet
+1. Add a config entry (Pydantic model with `extra="forbid"`) to `app/core/timetable_config.py` and the example to `config/timetable.toml`.
+2. Add a CP-SAT builder to `SOFT_BUILDERS` / `FLEXIBLE_BUILDERS` in `constraints.py`, using the shared indexes in `ModelContext`.
+3. Add an independent calculator to `CALCULATORS` in `penalties.py` (and a validator rule for hard modes).
+4. Add tests: a tiny instance where enabling the constraint changes the timetable (`tests/optimisation/test_constraints.py`). The random agreement test in `test_solver_consistency.py` picks up new keys automatically.
 
-The Phase 1 objective is to stabilise the data/API contract first. The design document explicitly separates intake, pre-analysis, solving, validation, export and change management into testable stages. Establishing stable entities and API semantics before modelling sessions and constraints reduces the risk of coupling the solver to an unstable input schema.
+### Notes
+
+- `faculty_workload_balance` (S2) is constant for a given input, because each session is placed exactly once and its faculty is fixed by the assignment. It is computed directly rather than modelled with O(n²) helper variables. It adds a constant offset to the objective and the best bound.
+- Weights in `config/timetable.toml` are the specification's suggested defaults. On the seed data `subject_day_spacing` and `group_daily_load_balance` compete with `subject_spreading`. Measure with the score report before tuning.

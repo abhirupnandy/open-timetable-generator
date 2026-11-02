@@ -9,6 +9,7 @@ from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+from app.db.models.scheduling_rules import Weekday
 
 if TYPE_CHECKING:
     from app.db.models.school import School
@@ -61,6 +62,11 @@ class Faculty(Base):
         SQLEnum(FacultyTimePreference),
         nullable=False,
         default=FacultyTimePreference.ANY,
+    )
+
+    preferred_day_off: Mapped[Weekday | None] = mapped_column(
+        SQLEnum(Weekday, name="weekday"),
+        nullable=True,
     )
 
     school_id: Mapped[int] = mapped_column(

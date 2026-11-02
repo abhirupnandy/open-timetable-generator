@@ -1,0 +1,201 @@
+# Open Timetable Generator - constraint and solver configuration.
+#
+# Unknown keys are rejected. Shapes:
+#   hard-only optional : enabled = true|false (+ params)
+#   flexible           : mode = "off" | "soft" | "hard", weight (used in soft mode) (+ params)
+#   soft-only          : enabled, weight (+ params)
+#
+# Always-on (not configurable): each session placed exactly once, no faculty /
+# student-population / room overlap, session fits in the day, room type,
+# room capacity, online/in-person room rules.
+
+[calendar]
+days = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"]
+lunch_after_period = 4          # lunch sits between P4 and P5
+
+[[calendar.periods]]
+number = 1
+start = "08:20"
+end = "09:20"
+
+[[calendar.periods]]
+number = 2
+start = "09:25"
+end = "10:25"
+
+[[calendar.periods]]
+number = 3
+start = "10:30"
+end = "11:30"
+
+[[calendar.periods]]
+number = 4
+start = "11:35"
+end = "12:35"
+
+[[calendar.periods]]
+number = 5
+start = "13:45"
+end = "14:45"
+
+[[calendar.periods]]
+number = 6
+start = "14:50"
+end = "15:50"
+
+[[calendar.periods]]
+number = 7
+start = "15:55"
+end = "16:55"
+
+[[calendar.periods]]
+number = 8
+start = "17:00"
+end = "18:00"
+
+[[calendar.blocked_slots]]      # applies to everyone
+day = "MONDAY"
+period = 6
+label = "TREP"
+
+[solver]
+max_time_seconds = 120
+workers = 8
+log_progress = false
+
+# ---------- Optional hard constraints ----------
+[hard.faculty_daily_span]
+enabled = true
+max_minutes = 480
+
+[hard.faculty_weekly_cap]
+enabled = true
+[hard.faculty_weekly_cap.hours]
+PROFESSOR = 9
+ASSOCIATE_PROFESSOR = 11
+ASSISTANT_PROFESSOR = 13
+PHD_SCHOLAR = 8
+
+[hard.faculty_weekly_minimum]
+enabled = false
+[hard.faculty_weekly_minimum.hours]
+PROFESSOR = 6
+
+[hard.locked_sessions]
+enabled = true
+
+[hard.group_blocked_slots]
+enabled = true
+
+[hard.role_restrictions]
+enabled = false
+PHD_SCHOLAR = ["LAB", "TUTORIAL"]
+
+# ---------- Flexible (off / soft / hard) ----------
+[constraints.no_session_across_lunch]
+mode = "soft"
+weight = 60
+
+[constraints.faculty_max_consecutive]
+mode = "soft"
+weight = 40
+max_periods = 3
+
+[constraints.student_max_consecutive]
+mode = "off"
+weight = 30
+max_periods = 4
+
+# ---------- Soft constraints ----------
+[soft.student_gaps]             # S1
+enabled = true
+weight = 100
+
+[soft.student_min_free_periods] # S14
+enabled = true
+weight = 90
+min_free = 2
+
+[soft.subject_spreading]        # S4
+enabled = true
+weight = 80
+
+[soft.faculty_workload_balance] # S2
+enabled = true
+weight = 70
+
+[soft.faculty_max_lectures_per_day] # S11
+enabled = true
+weight = 60
+max_lectures = 2
+
+[soft.faculty_time_preference]  # S3
+enabled = true
+weight = 50
+[soft.faculty_time_preference.ranges]
+MORNING = [1, 2, 3, 4]
+AFTERNOON = [5, 6, 7, 8]
+EVENING = [7, 8]
+
+[soft.avoid_periods]
+enabled = true
+weight = 40
+[[soft.avoid_periods.rules]]
+period = 8
+penalty = 2
+[[soft.avoid_periods.rules]]
+period = 1
+penalty = 1
+subject_types = ["LAB"]
+
+[soft.faculty_gaps]
+enabled = true
+weight = 75
+
+[soft.room_stability]
+enabled = true
+weight = 30
+
+[soft.subject_day_spacing]
+enabled = true
+weight = 35
+
+[soft.group_daily_load_balance]
+enabled = true
+weight = 30
+
+[soft.parallel_batch_labs]
+enabled = true
+weight = 25
+
+[soft.room_size_fit]
+enabled = true
+weight = 10
+waste_unit = 10                 # 1 penalty per 10 empty seats
+
+[soft.faculty_compact_days]     # pulls against S11 / faculty_daily_load - keep low
+enabled = false
+weight = 15
+
+[soft.consistent_subject_time]
+enabled = false
+weight = 10
+
+[soft.faculty_daily_load]
+enabled = true
+weight = 30
+max_periods = 4
+
+[soft.online_at_day_edges]
+enabled = true
+weight = 20
+
+[soft.faculty_preferred_day_off] # uses faculty.preferred_day_off
+enabled = false
+weight = 40
+
+[soft.stability_vs_previous]    # needs a previous timetable CSV
+enabled = false
+weight = 50
+previous_timetable = "output/timetable_master.csv"
+room_change_penalty = 0
