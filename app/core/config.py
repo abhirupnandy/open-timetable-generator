@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     debug: bool = True
     database_url: str = "sqlite:///./data/open_timetable.db"
+    timetable_config_path: str = "config/timetable.toml"
+    output_dir: str = "output"
+    log_level: str = "INFO"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 

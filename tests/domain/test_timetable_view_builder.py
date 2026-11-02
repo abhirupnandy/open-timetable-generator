@@ -13,7 +13,6 @@ from app.db.models import (
     SubjectType,
     TeachingAssignment,
 )
-from app.db.session import SessionLocal
 from app.domain.calendar import Day
 from app.domain.placement import SessionPlacement
 from app.domain.room import SchedulingRoom
@@ -23,10 +22,10 @@ from app.domain.timetable import SchedulingSession
 from app.domain.timetable_view_builder import build_timetable_view_entries
 
 
-def test_build_timetable_view_entries() -> None:
+def test_build_timetable_view_entries(seeded_session_factory) -> None:
     now = datetime.now(UTC)
 
-    with SessionLocal() as db:
+    with seeded_session_factory() as db:
         subject = Subject(
             code="CS101",
             name="Data Structures",

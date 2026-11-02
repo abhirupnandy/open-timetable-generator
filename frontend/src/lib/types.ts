@@ -2,11 +2,12 @@
 
 export type Row = { id: number } & Record<string, unknown>;
 
-export type RunStatus = "running" | "succeeded" | "infeasible" | "failed";
+export type RunStatus = "running" | "succeeded" | "failed";
 
 export interface RunSummary {
   id: string;
   status: RunStatus;
+  stage: string;
   started_at: string;
   finished_at: string | null;
   elapsed_seconds: number;
@@ -74,6 +75,8 @@ export interface RunResult {
 }
 
 export interface RunDetail extends RunSummary {
+  error_detail: string | null;
+  log: string;
   files: { name: string; label: string }[];
   result: RunResult | null;
 }
@@ -101,4 +104,37 @@ export interface ConfigResponse {
   config: TimetableConfig;
   summary: string[];
   enabled_optional_hard_constraints: string[];
+}
+
+export type DataSummary = Record<string, number>;
+
+export interface ImportIssue {
+  sheet: string;
+  row: number | null;
+  column: string | null;
+  message: string;
+}
+
+export interface ImportResult {
+  ok: boolean;
+  counts: Record<string, number>;
+  issues: ImportIssue[];
+}
+
+/** Subset of JSON Schema produced by Pydantic's ``model_json_schema``. */
+export interface JsonSchema {
+  type?: string;
+  title?: string;
+  description?: string;
+  enum?: unknown[];
+  const?: unknown;
+  default?: unknown;
+  minimum?: number;
+  exclusiveMinimum?: number;
+  maximum?: number;
+  items?: JsonSchema;
+  properties?: Record<string, JsonSchema>;
+  anyOf?: JsonSchema[];
+  $ref?: string;
+  $defs?: Record<string, JsonSchema>;
 }

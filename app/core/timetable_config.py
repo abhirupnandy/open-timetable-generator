@@ -18,6 +18,7 @@ not represented here.
 
 from __future__ import annotations
 
+import json
 import re
 import tomllib
 from enum import StrEnum
@@ -46,6 +47,17 @@ class ConstraintMode(StrEnum):
 
 class _Strict(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
+
+
+# TOML has no null. Fields where "not set" differs from the default accept
+# the string "none", which the config writer emits for None.
+NONE_SENTINEL = "none"
+
+
+def _none_sentinel(value: object) -> object:
+    if isinstance(value, str) and value.strip().lower() == NONE_SENTINEL:
+        return None
+    return value
 
 
 def _minutes(value: str) -> int:
@@ -121,6 +133,10 @@ class CalendarConfig(_Strict):
         default_factory=lambda: [BlockedSlotConfig(day="MONDAY", period=6, label="TREP")]
     )
 
+    _lunch_none = field_validator("lunch_after_period", mode="before")(
+        classmethod(lambda cls, value: _none_sentinel(value))
+    )
+
     @model_validator(mode="after")
     def _validate(self) -> CalendarConfig:
         if not self.days:
@@ -180,6 +196,10 @@ class SolverConfig(_Strict):
     log_progress: bool = False
     random_seed: int | None = None
 
+    _seed_none = field_validator("random_seed", mode="before")(
+        classmethod(lambda cls, value: _none_sentinel(value))
+    )
+
 
 # ---------------------------------------------------------------------------
 # Optional hard constraints
@@ -191,6 +211,10 @@ class DesignationHours(_Strict):
     ASSOCIATE_PROFESSOR: int | None = Field(default=None, ge=0)
     ASSISTANT_PROFESSOR: int | None = Field(default=None, ge=0)
     PHD_SCHOLAR: int | None = Field(default=None, ge=0)
+
+    _hours_none = field_validator(*DESIGNATIONS, mode="before")(
+        classmethod(lambda cls, value: _none_sentinel(value))
+    )
 
     def for_designation(self, designation: str) -> int | None:
         if designation not in DESIGNATIONS:
@@ -241,6 +265,10 @@ class RoleRestrictionsConfig(_Strict):
     ASSOCIATE_PROFESSOR: list[SubjectTypeName] | None = None
     ASSISTANT_PROFESSOR: list[SubjectTypeName] | None = None
     PHD_SCHOLAR: list[SubjectTypeName] | None = Field(default_factory=lambda: ["LAB", "TUTORIAL"])
+
+    _roles_none = field_validator(*DESIGNATIONS, mode="before")(
+        classmethod(lambda cls, value: _none_sentinel(value))
+    )
 
     def allowed_types(self, designation: str) -> frozenset[str] | None:
         if designation not in DESIGNATIONS:
@@ -330,6 +358,10 @@ class AvoidPeriodRule(_Strict):
     penalty: int = Field(default=1, ge=0)
     subject_types: list[SubjectTypeName] | None = None
     days: list[Weekday] | None = None
+
+    _filters_none = field_validator("subject_types", "days", mode="before")(
+        classmethod(lambda cls, value: _none_sentinel(value))
+    )
 
 
 class AvoidPeriodsConfig(SoftConfig):
@@ -527,3 +559,87 @@ def load_timetable_config(path: str | Path | None = None) -> TimetableConfig:
         raise TimetableConfigError(f"Invalid TOML in {path}: {exc}") from exc
 
     return parse_timetable_config(data)
+
+
+# ---------------------------------------------------------------------------
+# Writing (used by the web UI's config editor)
+# ---------------------------------------------------------------------------
+
+
+def _toml_value(value: object) -> str:
+    if value is None:
+        return f'"{NONE_SENTINEL}"'
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, int | float):
+        return repr(value)
+    if isinstance(value, str):
+        return json.dumps(value, ensure_ascii=False)
+    if isinstance(value, list):
+        return "[" + ", ".join(_toml_value(item) for item in value) + "]"
+    raise TypeError(f"Cannot write {type(value).__name__} to TOML")
+
+
+def _is_table_array(value: object) -> bool:
+    return isinstance(value, list) and bool(value) and all(isinstance(item, dict) for item in value)
+
+
+def _write_table(lines: list[str], path: list[str], table: dict) -> None:
+    scalars = {
+        key: value
+        for key, value in table.items()
+        if not isinstance(value, dict) and not _is_table_array(value)
+    }
+    if path and (scalars or not table):
+        lines.append("")
+        lines.append(f"[{'.'.join(path)}]")
+    for key, value in scalars.items():
+        lines.append(f"{key} = {_toml_value(value)}")
+    for key, value in table.items():
+        if isinstance(value, dict):
+            _write_table(lines, [*path, key], value)
+        elif _is_table_array(value):
+            for item in value:
+                lines.append("")
+                lines.append(f"[[{'.'.join([*path, key])}]]")
+                for item_key, item_value in item.items():
+                    lines.append(f"{item_key} = {_toml_value(item_value)}")
+
+
+def dump_timetable_config(config: TimetableConfig) -> str:
+    """Serialise a config to TOML that :func:`load_timetable_config` reads back."""
+
+    lines = [
+        "# Open Timetable Generator - constraint and solver configuration.",
+        "# Edited from the web UI (Constraints page) or by hand. Unknown keys are rejected.",
+        f'# "{NONE_SENTINEL}" means "not set" for optional values.',
+    ]
+    _write_table(lines, [], config.model_dump(mode="json"))
+    return "\n".join(lines) + "\n"
+
+
+class ConfigStore:
+    """Read/write access to one TOML config file, reloaded when it changes."""
+
+    def __init__(self, path: str | Path = DEFAULT_CONFIG_PATH) -> None:
+        self.path = Path(path)
+        self._cached: tuple[float, TimetableConfig] | None = None
+
+    def load(self) -> TimetableConfig:
+        if not self.path.exists():
+            return TimetableConfig()
+        mtime = self.path.stat().st_mtime
+        if self._cached is None or self._cached[0] != mtime:
+            self._cached = (mtime, load_timetable_config(self.path))
+        return self._cached[1]
+
+    def save(self, config: TimetableConfig) -> TimetableConfig:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = self.path.with_suffix(".toml.tmp")
+        temporary.write_text(dump_timetable_config(config), encoding="utf-8")
+        temporary.replace(self.path)
+        self._cached = None
+        return self.load()
+
+    def reset(self) -> TimetableConfig:
+        return self.save(TimetableConfig())

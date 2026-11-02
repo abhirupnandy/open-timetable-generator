@@ -12,6 +12,7 @@ from app.db.models.scheduling_rules import (
 from app.db.models.school import School
 from app.db.models.subject import Subject, SubjectType
 from app.db.models.teaching_assignment import AssignmentMode, TeachingAssignment
+from app.db.models.timetable_run import TimetableRun
 
 __all__ = [
     "AcademicGroup",
@@ -31,4 +32,5 @@ __all__ = [
     "Unavailability",
     "Weekday",
     "TeachingAssignment",
+    "TimetableRun",
 ]

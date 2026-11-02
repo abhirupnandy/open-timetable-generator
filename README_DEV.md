@@ -39,6 +39,9 @@ Represents both lecture groups and batches. A batch can reference a parent group
 ### TeachingAssignment
 Central input record connecting subject, course, academic group and faculty, with weekly sessions, duration, mode, required room type and `allow_across_lunch` (exempts it from the lunch rule). One faculty and one academic group per assignment.
 
+### TimetableRun
+One solver run: status (`running` / `succeeded` / `failed`), stage, progress log, error summary and detail, result JSON and export file names. Persisted so failures can be inspected later. Runs left `running` by a crash are marked failed on startup.
+
 ### Constraint inputs
 `unavailability` (FACULTY | ROOM, day, start/end period), `group_blocked_slots` (group, day, period, label) and `session_locks` (assignment, session number, day, start period, optional room). `faculty.preferred_day_off` feeds the soft constraint of the same name.
 
@@ -111,4 +114,8 @@ Every penalty also has a pure-Python calculator in `penalties.py`. `score_report
 ### Notes
 
 - `faculty_workload_balance` (S2) is constant for a given input, because each session is placed exactly once and its faculty is fixed by the assignment. It is computed directly rather than modelled with O(n²) helper variables. It adds a constant offset to the objective and the best bound.
-- Weights in `config/timetable.toml` are the specification's suggested defaults. On the seed data `subject_day_spacing` and `group_daily_load_balance` compete with `subject_spreading`. Measure with the score report before tuning.
+- Weights in `config/timetable.toml` are the specification's suggested defaults. On the sample data `subject_day_spacing` and `group_daily_load_balance` compete with `subject_spreading`. Measure with the score report before tuning.
+
+## Data import
+
+`app/data_io/spec.py` defines every workbook sheet and column once. The template (`workbook.build_workbook()`), the export of current data (`workbook.export_rows`) and the importer (`importer.import_workbook`) all use it. The importer parses every cell, then checks uniqueness, references between sheets, the group hierarchy, room types and lock targets, collecting all issues. It writes nothing unless there are none, and then replaces all data in one transaction. To add a column, add it to the spec and the model, then handle it in `_replace_all` and `export_rows`.

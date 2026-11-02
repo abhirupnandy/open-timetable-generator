@@ -27,3 +27,9 @@ def get_db() -> Generator[Session]:
         yield db
     finally:
         db.close()
+
+
+def get_session_factory() -> sessionmaker:
+    """Session factory for work outside a request (background solver runs)."""
+
+    return SessionLocal

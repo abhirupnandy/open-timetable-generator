@@ -1,15 +1,6 @@
 from __future__ import annotations
 
-import pytest
-
-from app.api.v1.timetable import RunManager, TimetableRun, get_run_manager
-
-
-@pytest.fixture
-def manager(test_app, tmp_path):
-    instance = RunManager(tmp_path)
-    test_app.dependency_overrides[get_run_manager] = lambda: instance
-    return instance
+from app.db.models import TimetableRun
 
 
 def _seed_minimal(client):
@@ -79,27 +70,84 @@ def test_config_endpoint(client):
     assert any("student_gaps" in line for line in body["summary"])
 
 
-def test_run_requires_assignments(client, manager):
-    response = client.post("/api/v1/timetable/runs", json={"max_time_seconds": 1})
-    assert response.status_code == 422
+def test_config_can_be_edited_validated_and_reset(client, config_store):
+    config = client.get("/api/v1/timetable/config").json()["config"]
+    config["soft"]["faculty_gaps"]["weight"] = 5
+    config["constraints"]["no_session_across_lunch"]["mode"] = "hard"
+    config["calendar"]["lunch_after_period"] = None
+    config["hard"]["role_restrictions"]["PHD_SCHOLAR"] = None
+
+    saved = client.put("/api/v1/timetable/config", json=config)
+    assert saved.status_code == 200
+    assert saved.json()["config"]["soft"]["faculty_gaps"]["weight"] == 5
+
+    reloaded = config_store.load()
+    assert reloaded.soft.faculty_gaps.weight == 5
+    assert reloaded.calendar.lunch_after_period is None
+    assert reloaded.hard.role_restrictions.PHD_SCHOLAR is None
+    assert 'mode = "hard"' in config_store.path.read_text()
+
+    config["soft"]["faculty_gaps"]["weight"] = -1
+    config["soft"]["typo_constraint"] = {"enabled": True}
+    bad = client.put("/api/v1/timetable/config", json=config)
+    assert bad.status_code == 422
+    messages = " ".join(item["msg"] for item in bad.json()["detail"])
+    assert "greater than or equal to 0" in messages and "Extra inputs" in messages
+    assert config_store.load().soft.faculty_gaps.weight == 5  # unchanged
+
+    reset = client.post("/api/v1/timetable/config/reset").json()
+    assert reset["config"]["soft"]["faculty_gaps"]["weight"] == 75
 
 
-def test_run_solves_and_exposes_results_and_files(client, manager):
+def test_config_schema(client):
+    schema = client.get("/api/v1/timetable/config/schema").json()
+    assert "calendar" in schema["properties"] and "$defs" in schema
+
+
+def _start(client, run_manager, seconds=2):
+    response = client.post("/api/v1/timetable/runs", json={"max_time_seconds": seconds})
+    assert response.status_code == 202
+    run_id = response.json()["id"]
+    run_manager.wait(run_id)
+    return client.get(f"/api/v1/timetable/runs/{run_id}").json()
+
+
+def test_run_without_data_is_recorded_as_failed_with_reason(client, run_manager):
+    detail = _start(client, run_manager)
+    assert detail["status"] == "failed"
+    assert "no active teaching assignments" in detail["error"]
+    assert "Import a data workbook" in detail["error_detail"]
+    assert "FAILED" in detail["log"]
+
+    failures = client.get("/api/v1/timetable/runs?status_filter=failed").json()
+    assert [run["id"] for run in failures] == [detail["id"]]
+
+
+def test_infeasible_run_explains_why(client, run_manager):
+    _seed_minimal(client)
+    assignment = client.get("/api/v1/assignments").json()[0]
+    client.patch(f"/api/v1/assignments/{assignment['id']}", json={"sessions_per_week": 20})
+
+    detail = _start(client, run_manager)
+    assert detail["status"] == "failed"
+    assert detail["stage"] == "solving"
+    assert "Pre-solve checks found" in detail["error"]
+    assert "weekly cap is 13" in detail["error_detail"]
+
+
+def test_run_solves_and_exposes_results_and_files(client, run_manager):
     _seed_minimal(client)
 
-    started = client.post("/api/v1/timetable/runs", json={"max_time_seconds": 2})
-    assert started.status_code == 202
-    run_id = started.json()["id"]
-    assert started.json()["session_count"] == 3
+    detail = _start(client, run_manager)
+    assert detail["status"] == "succeeded", detail["error_detail"]
+    assert detail["session_count"] == 3
+    assert detail["stage"] == "done"
+    for stage in ("Loading scheduling data", "Solver finished", "Writing CSV"):
+        assert stage in detail["log"]
 
-    run = manager.wait(run_id)
-    assert run.status == "succeeded", run.error
-
-    detail = client.get(f"/api/v1/timetable/runs/{run_id}").json()
     result = detail["result"]
     assert result["validation"]["is_valid"]
     assert len(result["entries"]) == 3
-    assert {entry["group_code"] for entry in result["entries"]} == {"G1"}
     assert result["calendar"]["periods"][0] == {"number": 1, "start": "08:20", "end": "09:20"}
     assert result["score_report"]["mismatches"] == []
     assert {item["name"] for item in detail["files"]} >= {
@@ -107,27 +155,66 @@ def test_run_solves_and_exposes_results_and_files(client, manager):
         "grid_by_group.xlsx",
     }
 
-    listing = client.get("/api/v1/timetable/runs").json()
-    assert listing[0]["id"] == run_id and listing[0]["status"] == "succeeded"
-
+    run_id = detail["id"]
     csv = client.get(f"/api/v1/timetable/runs/{run_id}/files/timetable_master.csv")
     assert csv.status_code == 200 and "Session ID" in csv.text
     assert client.get(f"/api/v1/timetable/runs/{run_id}/files/..%2Fsecret").status_code == 404
-    assert client.get("/api/v1/timetable/runs/missing").status_code == 404
+
+    assert client.delete(f"/api/v1/timetable/runs/{run_id}").status_code == 204
+    assert client.get(f"/api/v1/timetable/runs/{run_id}").status_code == 404
+    assert not (run_manager.files_dir(run_id) / "timetable_master.csv").exists()
 
 
-def test_only_one_run_at_a_time(client, manager):
-    _seed_minimal(client)
+def test_only_one_run_at_a_time(client, run_manager):
     from datetime import UTC, datetime
 
-    manager._runs["busy"] = TimetableRun(
-        id="busy",
-        status="running",
-        started_at=datetime.now(UTC),
-        max_time_seconds=1,
-        session_count=1,
-    )
+    with run_manager.session_factory() as db:
+        db.add(
+            TimetableRun(
+                id="busy",
+                status="running",
+                stage="solving",
+                started_at=datetime.now(UTC),
+                max_time_seconds=1,
+                session_count=1,
+                elapsed_seconds=0,
+                log="",
+                files_json="[]",
+            )
+        )
+        db.commit()
+
     assert client.post("/api/v1/timetable/runs", json={}).status_code == 409
+    assert client.delete("/api/v1/timetable/runs/busy").status_code == 409
+
+
+def test_interrupted_runs_are_marked_failed_on_startup(tmp_path, run_manager):
+    from datetime import UTC, datetime
+
+    from app.api.v1.timetable import RunManager
+
+    with run_manager.session_factory() as db:
+        db.add(
+            TimetableRun(
+                id="ghost",
+                status="running",
+                stage="solving",
+                started_at=datetime.now(UTC),
+                max_time_seconds=1,
+                session_count=1,
+                elapsed_seconds=0,
+                log="",
+                files_json="[]",
+            )
+        )
+        db.commit()
+
+    RunManager(run_manager.session_factory, tmp_path)
+
+    with run_manager.session_factory() as db:
+        ghost = db.get(TimetableRun, "ghost")
+        assert ghost.status == "failed"
+        assert "server stopped" in ghost.error_summary
 
 
 def test_frontend_is_served_with_spa_fallback(tmp_path):

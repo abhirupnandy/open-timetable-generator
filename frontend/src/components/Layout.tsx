@@ -7,9 +7,11 @@ const MenuContext = createContext<() => void>(() => {});
 
 const MAIN_LINKS = [
   { to: "/", label: "Overview", end: true },
-  { to: "/generate", label: "Generate" },
-  { to: "/timetable", label: "Timetable" },
+  { to: "/import", label: "Import data" },
   { to: "/constraints", label: "Constraints" },
+  { to: "/generate", label: "Generate" },
+  { to: "/runs", label: "Run history" },
+  { to: "/timetable", label: "Timetable" },
 ];
 
 export function Layout() {
@@ -32,7 +34,7 @@ export function Layout() {
                 {link.label}
               </NavLink>
             ))}
-            <div className="nav-section">Data</div>
+            <div className="nav-section">Edit data</div>
             {RESOURCE_KEYS.map((key) => (
               <NavLink key={key} to={`/data/${key}`}>
                 {RESOURCES[key].label}

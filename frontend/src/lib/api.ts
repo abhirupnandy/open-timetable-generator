@@ -1,4 +1,13 @@
-import type { ConfigResponse, Row, RunDetail, RunSummary } from "./types";
+import type {
+  ConfigResponse,
+  DataSummary,
+  ImportResult,
+  JsonSchema,
+  Row,
+  RunDetail,
+  RunSummary,
+  TimetableConfig,
+} from "./types";
 
 export const API_BASE = "/api/v1";
 
@@ -6,6 +15,7 @@ export class ApiError extends Error {
   constructor(
     message: string,
     readonly status: number,
+    readonly detail?: unknown,
   ) {
     super(message);
   }
@@ -26,19 +36,49 @@ export function errorMessage(detail: Detail, status: number): string {
   return `Request failed (${status})`;
 }
 
-export async function request<T>(path: string, init: { method?: string; body?: unknown } = {}): Promise<T> {
-  const response = await fetch(API_BASE + path, {
-    method: init.method ?? "GET",
-    headers: init.body !== undefined ? { "Content-Type": "application/json" } : undefined,
-    body: init.body !== undefined ? JSON.stringify(init.body) : undefined,
-  });
+interface RequestOptions {
+  method?: string;
+  body?: unknown;
+  raw?: Blob;
+}
+
+export async function request<T>(path: string, init: RequestOptions = {}): Promise<T> {
+  let response: Response;
+  try {
+    response = await fetch(API_BASE + path, {
+      method: init.method ?? "GET",
+      headers: init.raw
+        ? { "Content-Type": "application/octet-stream" }
+        : init.body !== undefined
+          ? { "Content-Type": "application/json" }
+          : undefined,
+      body: init.raw ?? (init.body !== undefined ? JSON.stringify(init.body) : undefined),
+    });
+  } catch (error) {
+    throw new ApiError(
+      `Cannot reach the API server (${error instanceof Error ? error.message : String(error)}). ` +
+        "Is the FastAPI backend running?",
+      0,
+    );
+  }
 
   if (response.status === 204) return undefined as T;
 
-  const body = (await response.json().catch(() => null)) as { detail?: Detail } | null;
+  const type = response.headers.get("content-type") ?? "";
+  if (!type.includes("application/json")) {
+    // e.g. the dev server returning index.html because /api is not proxied.
+    throw new ApiError(
+      `The API returned ${type || "no content type"} instead of JSON for ${path} (HTTP ${response.status}). ` +
+        "Check that the FastAPI backend is running on port 8000 and restart the dev server " +
+        "(npm run dev) so its /api proxy is active.",
+      response.status,
+    );
+  }
+
+  const body = (await response.json()) as { detail?: Detail } | null;
 
   if (!response.ok) {
-    throw new ApiError(errorMessage(body?.detail, response.status), response.status);
+    throw new ApiError(errorMessage(body?.detail, response.status), response.status, body?.detail);
   }
 
   return body as T;
@@ -50,10 +90,23 @@ export const api = {
   update: (path: string, id: number, body: Record<string, unknown>) =>
     request<Row>(`${path}/${id}`, { method: "PATCH", body }),
   remove: (path: string, id: number) => request<void>(`${path}/${id}`, { method: "DELETE" }),
+
   config: () => request<ConfigResponse>("/timetable/config"),
-  runs: () => request<RunSummary[]>("/timetable/runs"),
+  configSchema: () => request<JsonSchema>("/timetable/config/schema"),
+  saveConfig: (config: TimetableConfig) => request<ConfigResponse>("/timetable/config", { method: "PUT", body: config }),
+  resetConfig: () => request<ConfigResponse>("/timetable/config/reset", { method: "POST" }),
+
+  runs: (status?: string) => request<RunSummary[]>(`/timetable/runs${status ? `?status_filter=${status}` : ""}`),
   run: (id: string) => request<RunDetail>(`/timetable/runs/${id}`),
+  deleteRun: (id: string) => request<void>(`/timetable/runs/${id}`, { method: "DELETE" }),
   startRun: (maxTimeSeconds: number) =>
     request<RunSummary>("/timetable/runs", { method: "POST", body: { max_time_seconds: maxTimeSeconds } }),
   fileUrl: (runId: string, name: string) => `${API_BASE}/timetable/runs/${runId}/files/${name}`,
+
+  dataSummary: () => request<DataSummary>("/data/summary"),
+  importData: (file: Blob) => request<ImportResult>("/data/import", { method: "POST", raw: file }),
+  clearData: () => request<Record<string, number>>("/data/clear", { method: "POST" }),
+  templateUrl: `${API_BASE}/data/template`,
+  sampleUrl: `${API_BASE}/data/sample`,
+  exportUrl: `${API_BASE}/data/export`,
 };
