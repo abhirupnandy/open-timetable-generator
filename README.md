@@ -114,6 +114,7 @@ uv run uvicorn app.main:app --reload
 
 Then open:
 
+- Web UI: http://127.0.0.1:8000/
 - Swagger UI: http://127.0.0.1:8000/docs
 - ReDoc: http://127.0.0.1:8000/redoc
 - OpenAPI JSON: http://127.0.0.1:8000/openapi.json
@@ -136,6 +137,18 @@ uv run python -m app.db.seed          # or: uv run python scripts/seed_sample_da
 ```
 
 The seed creates one school with B.Tech, B.Sc, BCA, M.Tech, MCA and M.Sc AI programmes: 16 programme-year groups with two lab batches each (48 groups), 28 faculty, 16 rooms, 64 subjects and 80 teaching assignments (173 weekly sessions).
+
+## Web UI
+
+FastAPI serves a single-page UI at `/` (`app/web/`, plain HTML/CSS/JS, no build step):
+
+- **Overview**: record counts, weekly demand and the latest run.
+- **Data**: list, filter, sort, add, edit and delete every resource, including unavailability, group blocked slots and session locks.
+- **Generate**: start a solve with a time limit, watch progress, then see the headline metrics, the score report (independent calculator vs solver) and download links for every export.
+- **Timetable**: days x periods grid per group (including parent and batch sessions), faculty member or room, with lunch and blocked slots marked. The grid is print-friendly.
+- **Constraints**: read-only view of `config/timetable.toml`.
+
+Solving runs in a background thread through `POST /api/v1/timetable/runs`, and the UI polls `GET /api/v1/timetable/runs/{id}`. Only one run can be active at a time. Runs are kept in memory, and their export files go to `output/runs/<id>/`.
 
 ## Generate a timetable
 
@@ -179,8 +192,9 @@ All CRUD endpoints are under `/api/v1`:
 - `/unavailability` (faculty/room unavailable period ranges; shared rooms record external bookings here)
 - `/group-blocked-slots` (e.g. Year 1 sports, applies to the group and its batches)
 - `/session-locks` (pin a session to a day/start period and optionally a room)
+- `/timetable/config`, `/timetable/runs`, `/timetable/runs/{id}`, `/timetable/runs/{id}/files/{name}` (solve runs; not CRUD)
 
-Each provides GET list, POST create, GET by ID, PATCH by ID and DELETE by ID.
+Each CRUD resource provides GET list, POST create, GET by ID, PATCH by ID and DELETE by ID.
 
 ## Configuration
 
