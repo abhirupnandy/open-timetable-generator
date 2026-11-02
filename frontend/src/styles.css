@@ -100,7 +100,7 @@ nav a {
 }
 
 nav a:hover { background: var(--surface-2); text-decoration: none; }
-nav a.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+nav a.active, nav a[aria-current="page"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
 
 .nav-section {
   font-size: 11px;

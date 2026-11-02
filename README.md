@@ -26,6 +26,7 @@ Institutional timetable-generation backend: FastAPI/SQLAlchemy API and database,
 - pytest-asyncio
 - httpx
 - Ruff
+- Node.js 20+ (frontend): React 19, TypeScript, Vite, TanStack Query, React Router, Vitest
 
 ## Project structure
 
@@ -42,7 +43,10 @@ open-timetable-generator/
 │   ├── export/            # CSV / Excel exporters
 │   ├── optimisation/      # CP-SAT model, constraints, penalty calculators, score report
 │   ├── schemas/
+│   ├── frontend.py        # serves frontend/dist with SPA fallback
 │   └── run_timetable.py   # command-line timetable generation
+├── frontend/              # React + TypeScript web UI (Vite)
+│   └── src/{pages,components,lib}
 ├── config/
 │   └── timetable.toml     # calendar, solver and constraint configuration
 ├── tests/
@@ -140,7 +144,27 @@ The seed creates one school with B.Tech, B.Sc, BCA, M.Tech, MCA and M.Sc AI prog
 
 ## Web UI
 
-FastAPI serves a single-page UI at `/` (`app/web/`, plain HTML/CSS/JS, no build step):
+The frontend is a React + TypeScript app in `frontend/`, built with Vite. It uses React Router for pages and TanStack Query for data fetching and polling. FastAPI serves the production build, so one server hosts both the API and the UI.
+
+```bash
+cd frontend
+npm install
+npm run build          # writes frontend/dist, served by FastAPI at /
+cd ..                  # back to the repository root
+uv run uvicorn app.main:app --reload
+```
+
+Start uvicorn from the repository root. From `frontend/` Python can't import the project's `app` package (`ModuleNotFoundError: No module named 'app'`). Don't fix that error by installing a package named `app`: unrelated PyPI packages (for example `myapplication`) provide a top-level `app` module that shadows this project.
+
+For frontend development with hot reload, run FastAPI on :8000 and the Vite dev server alongside it. Vite proxies `/api` to FastAPI:
+
+```bash
+cd frontend && npm run dev      # http://localhost:5173
+```
+
+Other scripts: `npm test` (Vitest + Testing Library) and `npm run typecheck`. If `frontend/dist` doesn't exist, `/` shows how to build it. Client-side routes such as `/timetable` fall back to `index.html`.
+
+Pages:
 
 - **Overview**: record counts, weekly demand and the latest run.
 - **Data**: list, filter, sort, add, edit and delete every resource, including unavailability, group blocked slots and session locks.

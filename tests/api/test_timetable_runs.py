@@ -130,9 +130,46 @@ def test_only_one_run_at_a_time(client, manager):
     assert client.post("/api/v1/timetable/runs", json={}).status_code == 409
 
 
-def test_frontend_is_served(client):
-    index = client.get("/")
-    assert index.status_code == 200
-    assert "/static/app.js" in index.text
-    assert client.get("/static/app.js").status_code == 200
-    assert client.get("/static/app.css").status_code == 200
+def test_frontend_is_served_with_spa_fallback(tmp_path):
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+
+    from app.frontend import mount_frontend
+
+    dist = tmp_path / "dist"
+    (dist / "assets").mkdir(parents=True)
+    (dist / "index.html").write_text('<div id="root"></div>')
+    (dist / "assets" / "index.js").write_text("console.log(1)")
+    (dist / "favicon.svg").write_text("<svg/>")
+
+    app = FastAPI()
+
+    @app.get("/api/v1/ping")
+    def ping():
+        return {"ok": True}
+
+    mount_frontend(app, dist)
+    client = TestClient(app)
+
+    assert client.get("/").text == '<div id="root"></div>'
+    assert client.get("/timetable").text == '<div id="root"></div>'
+    assert client.get("/data/rooms").text == '<div id="root"></div>'
+    assert client.get("/assets/index.js").status_code == 200
+    assert client.get("/favicon.svg").text == "<svg/>"
+    assert client.get("/api/v1/ping").json() == {"ok": True}
+    assert client.get("/api/v1/missing").status_code == 404
+    assert client.get("/api/v1/missing").json() == {"detail": "Not Found"}
+    assert client.get("/../pyproject.toml").text == '<div id="root"></div>'
+
+
+def test_unbuilt_frontend_explains_how_to_build(tmp_path):
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+
+    from app.frontend import mount_frontend
+
+    app = FastAPI()
+    mount_frontend(app, tmp_path / "missing")
+    response = TestClient(app).get("/")
+    assert response.status_code == 503
+    assert "npm run build" in response.text
