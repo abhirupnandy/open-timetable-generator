@@ -259,7 +259,9 @@ def timetable_pdf(
             details.append("includes parent-group and batch sessions")
         story.append(Paragraph(escape(" · ".join(details)), SUBTITLE))
         story.append(Spacer(1, 4 * mm))
-        story.append(_grid_table(shown, calendar, by, width))
+        story.append(
+            _grid_table(shown, calendar.for_entity(by, entity.key, group_parents), by, width)
+        )
 
     if not story:
         story.append(Paragraph("Nothing to print.", TITLE))

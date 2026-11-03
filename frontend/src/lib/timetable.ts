@@ -1,6 +1,6 @@
 // Pure helpers for laying out the days x periods grid.
 import { facultyLabel } from "./format";
-import type { CalendarInfo, TimetableEntry } from "./types";
+import type { BlockedSlot, CalendarInfo, GroupBlockedSlot, TimetableEntry } from "./types";
 
 export type GridView = "group" | "faculty" | "room";
 
@@ -80,6 +80,34 @@ export function entityOptions(
     faculty: [...faculty.values()].sort((a, b) => a.label.localeCompare(b.label)),
     room: plain(entries.flatMap((entry) => (entry.room ? [entry.room] : []))),
   };
+}
+
+/**
+ * Blocked slots of one grid: the global ones plus, in the group view, the
+ * blocks of every overlapping group (ancestors and batches), as the solver
+ * applies them. A block from another group is labelled with its code.
+ */
+export function blockedFor(
+  view: GridView,
+  entity: string,
+  parents: Record<string, string | null>,
+  global: BlockedSlot[],
+  groupSlots: GroupBlockedSlot[] = [],
+): BlockedSlot[] {
+  if (view !== "group" || !groupSlots.length) return global;
+  const related = relatedGroups(entity, parents);
+  const result = [...global];
+  for (const slot of groupSlots) {
+    if (!related.has(slot.group_code)) continue;
+    if (result.some((other) => other.day === slot.day && other.period === slot.period)) continue;
+    const label = slot.label || "Blocked";
+    result.push({
+      day: slot.day,
+      period: slot.period,
+      label: slot.group_code === entity ? label : `${label} (${slot.group_code})`,
+    });
+  }
+  return result;
 }
 
 export type GridCell =

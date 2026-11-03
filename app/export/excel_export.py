@@ -596,7 +596,7 @@ def export_grid_workbook(
         _write_grid(
             workbook.create_sheet(_unique_sheet_name(workbook, entity.title, by.title())),
             selected,
-            calendar,
+            calendar.for_entity(by, entity.key, group_parents),
             by=by,
             title=f"{by.title()}: {entity.title}",
             subtitle=subtitle,

@@ -17,7 +17,7 @@ from app.domain.timetable_view_builder import build_timetable_view_entries
 from app.domain.validator import validate_timetable
 from app.export.csv_export import export_timetable_csv, load_previous_placements
 from app.export.excel_export import export_all
-from app.export.layout import calendar_from_input
+from app.export.layout import calendar_from_input, group_block_rows
 from app.optimisation.score_report import (
     build_score_report,
     format_score_report,
@@ -269,7 +269,11 @@ def main(argv: list[str] | None = None) -> int:
     written = export_all(
         view_entries,
         output_dir,
-        calendar=calendar_from_input(timetable_input, config.calendar.blocked_slots),
+        calendar=calendar_from_input(
+            timetable_input,
+            config.calendar.blocked_slots,
+            group_block_rows(timetable_input, group_codes, config.hard.group_blocked_slots.enabled),
+        ),
         group_parents=group_parents,
         summary_rows=summary_sheet_rows(payload),
     )

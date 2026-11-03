@@ -43,7 +43,12 @@ from app.domain.timetable_view_builder import view_entries_from_metadata
 from app.domain.validator import validate_timetable
 from app.export.csv_export import export_timetable_csv
 from app.export.excel_export import export_all
-from app.export.layout import calendar_from_input, calendar_from_payload, entries_from_payload
+from app.export.layout import (
+    calendar_from_input,
+    calendar_from_payload,
+    entries_from_payload,
+    group_block_rows,
+)
 from app.export.pdf_export import timetable_pdf
 from app.optimisation.score_report import (
     build_score_report,
@@ -406,6 +411,11 @@ def _result_payload(
                 {"day": str(slot.day), "period": slot.period, "label": slot.label}
                 for slot in config.calendar.blocked_slots
             ],
+            "group_blocked_slots": group_block_rows(
+                timetable_input,
+                {group_id: code for group_id, (code, _) in metadata[1].items()},
+                config.hard.group_blocked_slots.enabled,
+            ),
         },
         "group_parents": _group_parents(timetable_input, metadata),
         "entries": [
@@ -438,7 +448,11 @@ def _write_exports(data, config, timetable_input, output_dir: Path) -> list[str]
     export_all(
         entries,
         output_dir,
-        calendar=calendar_from_input(timetable_input, config.calendar.blocked_slots),
+        calendar=calendar_from_input(
+            timetable_input,
+            config.calendar.blocked_slots,
+            data["calendar"]["group_blocked_slots"],
+        ),
         group_parents=data["group_parents"],
         summary_rows=summary_sheet_rows(payload),
     )

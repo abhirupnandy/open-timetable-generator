@@ -9,7 +9,7 @@ import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { formatDateTime, humanize } from "../lib/format";
 import { useConfig, useStoredState } from "../lib/hooks";
-import { entityOptions, entriesFor, type GridView } from "../lib/timetable";
+import { blockedFor, entityOptions, entriesFor, type GridView } from "../lib/timetable";
 import type { BlockedSlot, RunResult } from "../lib/types";
 
 const VIEWS: GridView[] = ["group", "faculty", "room"];
@@ -199,7 +199,12 @@ function GridSection({
       <div style={{ flexBasis: "100%" }}>
         <h2>{current?.label ?? entity}</h2>
         {list.length ? (
-          <TimetableGrid entries={shown} calendar={detail.calendar} view={view} blocked={blocked} />
+          <TimetableGrid
+            entries={shown}
+            calendar={detail.calendar}
+            view={view}
+            blocked={blockedFor(view, entity, detail.group_parents, blocked, detail.calendar.group_blocked_slots)}
+          />
         ) : (
           <div className="empty">{facultyOnly ? "You have no sessions in this timetable." : "Nothing to show."}</div>
         )}

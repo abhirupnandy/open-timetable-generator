@@ -64,6 +64,8 @@ export interface CalendarInfo {
   periods: { number: number; start: string | null; end: string | null }[];
   lunch_after_period: number | null;
   blocked_slots?: BlockedSlot[];
+  /** Enforced group blocks; a block applies to every group whose students overlap. */
+  group_blocked_slots?: GroupBlockedSlot[];
 }
 
 export interface RunResult {
@@ -86,6 +88,13 @@ export interface RunDetail extends RunSummary {
   log: string;
   files: { name: string; label: string }[];
   result: RunResult | null;
+}
+
+export interface GroupBlockedSlot {
+  group_code: string;
+  day: string;
+  period: number;
+  label: string;
 }
 
 export interface BlockedSlot {

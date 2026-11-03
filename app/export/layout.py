@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from app.domain.calendar import Day
 from app.domain.timetable_views import TimetableViewEntry, faculty_label
@@ -30,6 +30,8 @@ class ExportCalendar:
     period_times: Mapping[int, tuple[str, str]] = field(default_factory=dict)
     lunch_after_period: int | None = None
     blocked: Mapping[tuple[str, int], str] = field(default_factory=dict)
+    # Group-specific blocks: (group code, day, period, label).
+    group_blocked: tuple[tuple[str, str, int, str], ...] = ()
 
     @property
     def periods(self) -> range:
@@ -47,6 +49,28 @@ class ExportCalendar:
         if start and end:
             return f"{start[0]}–{end[1]}"
         return period_range(start_period, end_period)
+
+    def for_entity(
+        self,
+        by: str,
+        key: str,
+        group_parents: Mapping[str, str | None] | None = None,
+    ) -> ExportCalendar:
+        """Calendar of one grid: global blocks plus, for a group, the blocks of
+        every group whose students overlap with it (ancestors and batches),
+        exactly as the solver applies them. A block from another group is
+        labelled with that group's code."""
+
+        if by != "group" or not self.group_blocked:
+            return self
+        related = related_codes(key, group_parents or {})
+        blocked = dict(self.blocked)
+        for code, day, period, label in self.group_blocked:
+            if code not in related or (day, period) in blocked:
+                continue
+            text = label or "Blocked"
+            blocked[(day, period)] = text if code == key else f"{text} ({code})"
+        return replace(self, blocked=blocked)
 
     @classmethod
     def plain(cls, days: Iterable[str], periods_per_day: int) -> ExportCalendar:
@@ -323,11 +347,41 @@ def calendar_from_payload(calendar: Mapping) -> ExportCalendar:
             (item["day"], item["period"]): item.get("label", "")
             for item in calendar.get("blocked_slots", [])
         },
+        group_blocked=tuple(
+            (item["group_code"], item["day"], item["period"], item.get("label", ""))
+            for item in calendar.get("group_blocked_slots", [])
+        ),
     )
 
 
-def calendar_from_input(timetable_input, blocked_slots: Iterable = ()) -> ExportCalendar:
-    """Export calendar of a ``TimetableInput`` (``blocked_slots``: config entries)."""
+def group_block_rows(timetable_input, group_codes: Mapping[int, str], enabled: bool) -> list[dict]:
+    """Group blocked slots of a ``TimetableInput`` keyed by group code.
+
+    Empty when the ``group_blocked_slots`` hard constraint is disabled, since
+    the solver then ignores them.
+    """
+
+    if not enabled:
+        return []
+    return [
+        {
+            "group_code": group_codes[block.academic_group_id],
+            "day": block.day.value,
+            "period": block.period,
+            "label": block.label,
+        }
+        for block in timetable_input.group_blocked_slots or ()
+        if block.academic_group_id in group_codes
+    ]
+
+
+def calendar_from_input(
+    timetable_input,
+    blocked_slots: Iterable = (),
+    group_blocked: Iterable[Mapping] = (),
+) -> ExportCalendar:
+    """Export calendar of a ``TimetableInput`` (``blocked_slots``: config
+    entries; ``group_blocked``: rows from ``group_block_rows``)."""
 
     def hhmm(minutes: int) -> str:
         return f"{minutes // 60:02d}:{minutes % 60:02d}"
@@ -339,4 +393,7 @@ def calendar_from_input(timetable_input, blocked_slots: Iterable = ()) -> Export
         period_times={number: (hhmm(start), hhmm(end)) for number, (start, end) in times.items()},
         lunch_after_period=timetable_input.lunch_after_period,
         blocked={(str(slot.day), slot.period): slot.label for slot in blocked_slots},
+        group_blocked=tuple(
+            (row["group_code"], row["day"], row["period"], row["label"]) for row in group_blocked
+        ),
     )

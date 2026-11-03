@@ -120,6 +120,21 @@ def test_template_example_rows_import_and_solve(client, run_manager):
     run_manager.wait(started["id"])
     detail = client.get(f"/api/v1/timetable/runs/{started['id']}").json()
     assert detail["status"] == "succeeded", detail["error_detail"]
+    assert detail["result"]["calendar"]["group_blocked_slots"] == [
+        {"group_code": "CSE-Y1-A", "day": "WEDNESDAY", "period": 7, "label": "Sports"}
+    ]
+
+    # The section's block shows on its batches' grids (Wednesday row, P7 column).
+    from app.export.layout import calendar_from_payload
+
+    calendar = calendar_from_payload(detail["result"]["calendar"])
+    batch = calendar.for_entity("group", "CSE-Y1-A-B1", detail["result"]["group_parents"])
+    assert batch.blocked[("WEDNESDAY", 7)] == "Sports (CSE-Y1-A)"
+    grid = client.get(f"/api/v1/timetable/runs/{started['id']}/files/grid_by_group.xlsx")
+    sheet = load_workbook(BytesIO(grid.content))["CSE-Y1-A-B1"]
+    assert "Sports (CSE-Y1-A)" in [
+        cell for row in sheet.iter_rows(values_only=True) for cell in row
+    ]
 
 
 def test_sample_imports_and_export_round_trips(client):

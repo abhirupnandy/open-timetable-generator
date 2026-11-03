@@ -215,3 +215,46 @@ def test_export_all_and_pdf(tmp_path):
     assert pdf.startswith(b"%PDF") and pdf.count(b"/Type /Page\n") + pdf.count(b"/Type /Page ") >= 1
     single = timetable_pdf(entries, CALENDAR, by="faculty", keys=["RAVIKUMAR"])
     assert single.startswith(b"%PDF") and len(single) < len(pdf)
+
+
+def test_group_blocks_show_on_overlapping_groups_only(tmp_path):
+    calendar = ExportCalendar(
+        days=("MONDAY", "TUESDAY"),
+        periods_per_day=4,
+        group_blocked=(
+            ("G1", "TUESDAY", 2, "Sports"),
+            ("G1-B2", "MONDAY", 4, "Seminar"),
+        ),
+    )
+    parents = {"G1": None, "G1-B1": "G1", "G1-B2": "G1", "G2": None}
+    entries = (
+        entry("lecture", "G1", start=1),
+        entry("lab", "G1-B1", faculty="Dr B", start=3, end=3),
+        entry("other", "G2", faculty="Dr C", start=1),
+    )
+
+    assert calendar.for_entity("group", "G1-B1", parents).blocked == {("TUESDAY", 2): "Sports (G1)"}
+    assert calendar.for_entity("group", "G1", parents).blocked == {
+        ("TUESDAY", 2): "Sports",
+        ("MONDAY", 4): "Seminar (G1-B2)",
+    }
+    assert calendar.for_entity("group", "G2", parents).blocked == {}
+    assert calendar.for_entity("faculty", "DRA", parents) is calendar
+
+    path = export_grid_workbook(
+        entries, tmp_path / "grid.xlsx", by="group", group_parents=parents, calendar=calendar
+    )
+    workbook = load_workbook(path)
+    assert workbook["G1-B1"]["C6"].value == "Sports (G1)"  # Tuesday P2
+    assert workbook["G1"]["E5"].value == "Seminar (G1-B2)"  # Monday P4
+    g2 = [cell for row in workbook["G2"].iter_rows(values_only=True) for cell in row]
+    assert "Sports" not in " ".join(str(cell) for cell in g2)
+
+    faculty = export_grid_workbook(entries, tmp_path / "f.xlsx", by="faculty", calendar=calendar)
+    cells = [
+        c for ws in load_workbook(faculty) for row in ws.iter_rows(values_only=True) for c in row
+    ]
+    assert not any("Sports" in str(cell) for cell in cells)
+
+    pdf = timetable_pdf(entries, calendar, by="group", keys=["G1-B1"], group_parents=parents)
+    assert pdf.startswith(b"%PDF")

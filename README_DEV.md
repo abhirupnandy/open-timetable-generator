@@ -144,5 +144,5 @@ Every API route except `/health` and `/api/v1/auth/{status,setup,login}` require
 `app/export/layout.py` decides what goes where (entities, merged cells, faculty load); `excel_export.py` and `pdf_export.py` only render it.
 
 - Excel list sheets show day, clock time, subject, group, faculty, designation and room, with no internal session IDs. The CSV keeps `Session ID` because `stability_vs_previous` reads it back.
-- Grids merge multi-period sessions, colour each subject and end each row with that day's load. A **Faculty load** sheet (master and by-faculty workbooks) lists periods per day, the weekly total and the busiest day.
+- Grids merge multi-period sessions, colour each subject and end each row with that day's load. Group grids also show group blocked slots (when `hard.group_blocked_slots` is enabled) of every group whose students overlap, as the solver applies them: a section's block appears on its batches, and a batch's block appears on the section labelled with the batch code. Faculty and room grids show only global blocked slots. A **Faculty load** sheet (master and by-faculty workbooks) lists periods per day, the weekly total and the busiest day.
 - `GET /timetable/runs/{id}/pdf?by=group|faculty|room[&entity=KEY...][&download=true]` renders one A4 landscape page per entity from the stored run result. The web UI's **Print / PDF** button opens it.
