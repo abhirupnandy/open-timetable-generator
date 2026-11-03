@@ -16,12 +16,8 @@ from app.domain.render import render_timetable
 from app.domain.timetable_view_builder import build_timetable_view_entries
 from app.domain.validator import validate_timetable
 from app.export.csv_export import export_timetable_csv, load_previous_placements
-from app.export.excel_export import (
-    export_day_workbook,
-    export_faculty_workbook,
-    export_grid_workbook,
-    export_master_workbook,
-)
+from app.export.excel_export import export_all
+from app.export.layout import calendar_from_input, group_block_rows
 from app.optimisation.score_report import (
     build_score_report,
     format_score_report,
@@ -97,6 +93,7 @@ def main(argv: list[str] | None = None) -> int:
             faculty_names,
             room_names,
             course_metadata,
+            _faculty_details,
         ) = load_render_metadata(db)
 
         previous_placements = None
@@ -264,51 +261,24 @@ def main(argv: list[str] | None = None) -> int:
         for group_id, parent_id in (timetable_input.academic_group_parent_ids or {}).items()
         if group_id in group_codes
     }
-    day_names = [day.value for day in timetable_input.days]
+    path = write_score_report(payload, output_dir / "score_report.json")
+    print(f"[5/5] Exported score report to {path}", flush=True)
+    path = export_timetable_csv(view_entries, output_dir / "timetable_master.csv")
+    print(f"[5/5] Exported CSV to {path}", flush=True)
 
-    exports = [
-        ("score report", lambda: write_score_report(payload, output_dir / "score_report.json")),
-        ("CSV", lambda: export_timetable_csv(view_entries, output_dir / "timetable_master.csv")),
-        (
-            "master workbook",
-            lambda: export_master_workbook(
-                view_entries,
-                output_dir / "timetable_master.xlsx",
-                summary_rows=summary_sheet_rows(payload),
-            ),
+    written = export_all(
+        view_entries,
+        output_dir,
+        calendar=calendar_from_input(
+            timetable_input,
+            config.calendar.blocked_slots,
+            group_block_rows(timetable_input, group_codes, config.hard.group_blocked_slots.enabled),
         ),
-        (
-            "day-wise workbook",
-            lambda: export_day_workbook(view_entries, output_dir / "timetable_by_day.xlsx"),
-        ),
-        (
-            "faculty-wise workbook",
-            lambda: export_faculty_workbook(view_entries, output_dir / "timetable_by_faculty.xlsx"),
-        ),
-    ]
-
-    for by, filename in (
-        ("group", "grid_by_group.xlsx"),
-        ("faculty", "grid_by_faculty.xlsx"),
-        ("room", "grid_by_room.xlsx"),
-    ):
-        exports.append(
-            (
-                f"{by} grid workbook",
-                lambda by=by, filename=filename: export_grid_workbook(
-                    view_entries,
-                    output_dir / filename,
-                    by=by,
-                    days=day_names,
-                    periods_per_day=timetable_input.periods_per_day,
-                    group_parents=group_parents,
-                ),
-            )
-        )
-
-    for label, export in exports:
-        path = export()
-        print(f"[5/5] Exported {label} to {path}", flush=True)
+        group_parents=group_parents,
+        summary_rows=summary_sheet_rows(payload),
+    )
+    for path in written.values():
+        print(f"[5/5] Exported {path}", flush=True)
 
     total_elapsed = time.perf_counter() - total_start
 

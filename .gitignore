@@ -12,6 +12,7 @@ wheels/
 # Environment / secrets
 .env
 .env.*
+data/.secret_key
 
 # Databases
 *.db

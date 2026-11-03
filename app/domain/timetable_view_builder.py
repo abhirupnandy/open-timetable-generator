@@ -28,7 +28,9 @@ def view_entries_from_metadata(
         faculty_names,
         room_names,
         course_metadata,
+        *rest,
     ) = metadata
+    faculty_details = rest[0] if rest else {}
 
     room_by_session_id = {
         assignment.placement.session.id: assignment.room.id
@@ -58,6 +60,8 @@ def view_entries_from_metadata(
                 academic_group_code=group_code,
                 faculty_name=faculty_names[session.faculty_id],
                 room_name=room_names[room_id] if room_id is not None else None,
+                faculty_code=faculty_details.get(session.faculty_id, ("", ""))[0],
+                faculty_designation=faculty_details.get(session.faculty_id, ("", ""))[1],
             )
         )
 

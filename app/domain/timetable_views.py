@@ -18,6 +18,36 @@ class TimetableViewEntry:
     academic_group_code: str
     faculty_name: str
     room_name: str | None
+    faculty_code: str = ""
+    faculty_designation: str = ""
+
+    @property
+    def faculty_key(self) -> str:
+        """Stable identifier of the faculty member (employee ID, else name)."""
+
+        return self.faculty_code or self.faculty_name
+
+    @property
+    def faculty_label(self) -> str:
+        """Name with designation, e.g. "Dr A Rao (Asst. Prof.)"."""
+
+        return faculty_label(self.faculty_name, self.faculty_designation)
+
+
+DESIGNATION_SHORT = {
+    "PROFESSOR": "Prof.",
+    "ASSOCIATE_PROFESSOR": "Assoc. Prof.",
+    "ASSISTANT_PROFESSOR": "Asst. Prof.",
+    "PHD_SCHOLAR": "PhD Scholar",
+}
+
+
+def designation_label(designation: str) -> str:
+    return DESIGNATION_SHORT.get(designation, designation.replace("_", " ").title())
+
+
+def faculty_label(name: str, designation: str) -> str:
+    return f"{name} ({designation_label(designation)})" if designation else name
 
 
 _DAY_ORDER = {

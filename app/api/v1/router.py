@@ -1,7 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from app.api.v1 import (
     assignments,
+    auth,
     courses,
     data_io,
     faculty,
@@ -11,18 +12,29 @@ from app.api.v1 import (
     schools,
     subjects,
     timetable,
+    users,
 )
 
 api_router = APIRouter(prefix="/api/v1")
-api_router.include_router(schools.router)
-api_router.include_router(courses.router)
-api_router.include_router(faculty.router)
-api_router.include_router(rooms.router)
-api_router.include_router(subjects.router)
-api_router.include_router(groups.router)
-api_router.include_router(assignments.router)
-api_router.include_router(scheduling_rules.unavailability_router)
-api_router.include_router(scheduling_rules.group_blocks_router)
-api_router.include_router(scheduling_rules.session_locks_router)
+
+# Public (login) and per-route checks (users: admin; timetable: see module).
+api_router.include_router(auth.router)
+api_router.include_router(users.router)
 api_router.include_router(timetable.router)
-api_router.include_router(data_io.router)
+
+# Scheduling data: administrators and coordinators only.
+staff = [Depends(auth.require_staff)]
+for module_router in (
+    schools.router,
+    courses.router,
+    faculty.router,
+    rooms.router,
+    subjects.router,
+    groups.router,
+    assignments.router,
+    scheduling_rules.unavailability_router,
+    scheduling_rules.group_blocks_router,
+    scheduling_rules.session_locks_router,
+    data_io.router,
+):
+    api_router.include_router(module_router, dependencies=staff)

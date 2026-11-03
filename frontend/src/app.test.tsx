@@ -2,7 +2,16 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { config, configSchema, failedRun, rooms, runDetail, runSummary, schools } from "./test/fixtures";
+import {
+  config,
+  configSchema,
+  facultyUser,
+  failedRun,
+  rooms,
+  runDetail,
+  runSummary,
+  schools,
+} from "./test/fixtures";
 import { json, mockApi, renderApp } from "./test/utils";
 
 afterEach(() => vi.unstubAllGlobals());
@@ -149,6 +158,42 @@ describe("timetable page", () => {
     expect(screen.getByText("Physics")).toBeInTheDocument();
   });
 
+  it("shows designations and opens a PDF for printing", async () => {
+    localStorage.setItem("ttBy", "faculty");
+    localStorage.setItem("ttEntity", "F2");
+    const open = vi.fn();
+    vi.stubGlobal("open", open);
+    const withDesignations = {
+      ...runDetail,
+      result: {
+        ...runDetail.result!,
+        entries: runDetail.result!.entries.map((entry) =>
+          entry.faculty === "Dr A"
+            ? { ...entry, faculty: "Ravi Kumar", faculty_code: "F2", faculty_designation: "PHD_SCHOLAR" }
+            : { ...entry, faculty_code: "F1", faculty_designation: "ASSISTANT_PROFESSOR" },
+        ),
+      },
+    };
+    mockApi({
+      "GET /timetable/config": config,
+      "GET /timetable/runs": [runSummary],
+      "GET /timetable/runs/run1": withDesignations,
+    });
+    renderApp("/timetable");
+
+    expect(await screen.findByRole("heading", { name: "Ravi Kumar (PhD Scholar) · F2" })).toBeInTheDocument();
+    const select = screen.getByLabelText("Faculty");
+    expect(within(select).getByRole("option", { name: "Dr B (Asst. Prof.) · F1" })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Print / PDF" }));
+    expect(open).toHaveBeenCalledWith("/api/v1/timetable/runs/run1/pdf?by=faculty&entity=F2", "_blank", "noopener");
+    await userEvent.click(screen.getByRole("button", { name: "PDF of all faculty" }));
+    expect(open).toHaveBeenLastCalledWith("/api/v1/timetable/runs/run1/pdf?by=faculty", "_blank", "noopener");
+
+    await userEvent.selectOptions(screen.getByLabelText("View by"), "group");
+    expect(await screen.findAllByText(/Ravi Kumar \(PhD Scholar\)/)).not.toHaveLength(0);
+  });
+
   it("asks for a run when there is none", async () => {
     mockApi({ "GET /timetable/config": config, "GET /timetable/runs": [] });
     renderApp("/timetable");
@@ -243,7 +288,14 @@ describe("import page", () => {
     });
     renderApp("/import");
 
-    expect(screen.getByRole("link", { name: "Blank template" })).toHaveAttribute("href", "/api/v1/data/template");
+    expect(await screen.findByRole("link", { name: "Template with examples" })).toHaveAttribute(
+      "href",
+      "/api/v1/data/template",
+    );
+    expect(screen.getByRole("link", { name: "Blank template" })).toHaveAttribute(
+      "href",
+      "/api/v1/data/template?blank=true",
+    );
     await userEvent.upload(screen.getByLabelText("Workbook file"), xlsx());
     await userEvent.click(screen.getByRole("button", { name: "Import" }));
 
@@ -266,7 +318,7 @@ describe("import page", () => {
       },
     });
     renderApp("/import");
-    await userEvent.upload(screen.getByLabelText("Workbook file"), xlsx());
+    await userEvent.upload(await screen.findByLabelText("Workbook file"), xlsx());
     await userEvent.click(screen.getByRole("button", { name: "Import" }));
 
     expect(await screen.findByText("Import rejected: 2 problems found")).toBeInTheDocument();
@@ -327,5 +379,78 @@ describe("api errors", () => {
     );
     renderApp("/generate");
     expect(await screen.findByText(/instead of JSON/)).toBeInTheDocument();
+  });
+});
+
+describe("authentication", () => {
+  it("shows the sign-in page and signs in", async () => {
+    let signedIn = false;
+    const calls = mockApi({
+      "GET /auth/me": () => (signedIn ? facultyUser : json({ detail: "Sign in to continue" }, 401)),
+      "POST /auth/login": () => {
+        signedIn = true;
+        return json({ user: facultyUser });
+      },
+      "GET /timetable/runs": [],
+    });
+    renderApp("/");
+
+    await userEvent.type(await screen.findByLabelText("Username"), "F2");
+    await userEvent.type(screen.getByLabelText("Password"), "secret");
+    await userEvent.click(screen.getByRole("button", { name: "Sign in" }));
+
+    expect(await screen.findByRole("heading", { name: "My timetable" })).toBeInTheDocument();
+    expect(calls.find((call) => call.method === "POST")?.body).toEqual({ username: "F2", password: "secret" });
+  });
+
+  it("offers first-time setup when there are no accounts", async () => {
+    mockApi({
+      "GET /auth/me": json({ detail: "Sign in to continue" }, 401),
+      "GET /auth/status": { needs_setup: true },
+    });
+    renderApp("/");
+    expect(await screen.findByRole("heading", { name: "Create the administrator account" })).toBeInTheDocument();
+  });
+
+  it("limits faculty to their own timetable", async () => {
+    const calls = mockApi({
+      "GET /auth/me": facultyUser,
+      "GET /timetable/runs": [runSummary],
+      "GET /timetable/runs/run1": {
+        ...runDetail,
+        log: "",
+        files: [],
+        result: {
+          scope: "faculty",
+          calendar: runDetail.result!.calendar,
+          group_parents: {},
+          entries: [{ ...runDetail.result!.entries[0], faculty: "Ravi Kumar", faculty_code: "F2" }],
+        },
+      },
+    });
+    renderApp("/data/rooms");
+
+    expect(await screen.findByRole("heading", { name: "My timetable" })).toBeInTheDocument();
+    expect(await screen.findByText("Maths")).toBeInTheDocument();
+    expect(screen.getByText(/Signed in as Ravi Kumar \(PhD Scholar, F2\)/)).toBeInTheDocument();
+    expect(screen.queryByLabelText("View by")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Import data" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "User accounts" })).not.toBeInTheDocument();
+    expect(calls.some((call) => call.path.startsWith("/timetable/config"))).toBe(false);
+  });
+
+  it("shows user accounts to administrators", async () => {
+    mockApi({
+      "GET /users": [
+        { id: 1, username: "admin", full_name: "Admin User", role: "ADMIN", faculty_employee_id: null, faculty: null,
+          is_active: true, last_login_at: null },
+        { ...facultyUser },
+      ],
+      "GET /faculty": [],
+    });
+    renderApp("/users");
+    expect(await screen.findByRole("heading", { name: "User accounts" })).toBeInTheDocument();
+    expect(await screen.findByText("Ravi Kumar (PhD Scholar)")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "User accounts" })).toBeInTheDocument();
   });
 });

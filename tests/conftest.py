@@ -8,11 +8,13 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.api.v1._common import get_config_store
+from app.api.v1.auth import get_current_user
 from app.api.v1.timetable import RunManager, get_run_manager
 from app.core.timetable_config import DEFAULT_CONFIG_PATH, ConfigStore
 from app.data_io.importer import import_workbook
 from app.db import models  # noqa: F401
 from app.db.base import Base
+from app.db.models import User, UserRole
 from app.db.session import get_db, get_session_factory
 from app.main import app
 
@@ -48,8 +50,20 @@ def config_store(tmp_path) -> ConfigStore:
     return ConfigStore(path)
 
 
+TEST_ADMIN = User(
+    id=0,
+    username="test-admin",
+    full_name="Test Admin",
+    role=UserRole.ADMIN,
+    password_hash="",
+    is_active=True,
+)
+
+
 @pytest.fixture
-def test_app(tmp_path, config_store) -> Generator[FastAPI]:
+def unauthenticated_app(tmp_path, config_store) -> Generator[FastAPI]:
+    """The app with an isolated database and real authentication."""
+
     factory = _sqlite_factory(tmp_path / "test.db")
 
     def override_get_db():
@@ -66,9 +80,18 @@ def test_app(tmp_path, config_store) -> Generator[FastAPI]:
     app.dependency_overrides[get_config_store] = lambda: config_store
     app.dependency_overrides[get_run_manager] = lambda: manager
     app.state.test_run_manager = manager
+    app.state.test_session_factory = factory
     yield app
     app.dependency_overrides.clear()
     factory.kw["bind"].dispose()
+
+
+@pytest.fixture
+def test_app(unauthenticated_app) -> FastAPI:
+    """The app signed in as an administrator (most API tests)."""
+
+    unauthenticated_app.dependency_overrides[get_current_user] = lambda: TEST_ADMIN
+    return unauthenticated_app
 
 
 @pytest.fixture
@@ -79,4 +102,10 @@ def run_manager(test_app) -> RunManager:
 @pytest.fixture
 async def client(test_app: FastAPI):
     with TestClient(test_app) as test_client:
+        yield test_client
+
+
+@pytest.fixture
+def anon_client(unauthenticated_app):
+    with TestClient(unauthenticated_app) as test_client:
         yield test_client

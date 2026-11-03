@@ -76,14 +76,18 @@ export function ImportData() {
           </h2>
           <p className="muted">
             One sheet per kind of record, with instructions, required columns highlighted and dropdowns for fixed
-            values. Records refer to each other by code (school code, group code, employee ID).
+            values. Records refer to each other by code (school code, group code, employee ID). The template comes
+            with a few yellow example rows on every sheet showing what goes where; overwrite or delete them.
           </p>
           <div className="toolbar">
             <a className="button primary" href={api.templateUrl} download>
+              Template with examples
+            </a>
+            <a className="button" href={api.blankTemplateUrl} download>
               Blank template
             </a>
             <a className="button" href={api.sampleUrl} download>
-              Filled-in example
+              Full sample (80 assignments)
             </a>
             <a className="button" href={api.exportUrl} download>
               Current data

@@ -119,3 +119,30 @@ Every penalty also has a pure-Python calculator in `penalties.py`. `score_report
 ## Data import
 
 `app/data_io/spec.py` defines every workbook sheet and column once. The template (`workbook.build_workbook()`), the export of current data (`workbook.export_rows`) and the importer (`importer.import_workbook`) all use it. The importer parses every cell, then checks uniqueness, references between sheets, the group hierarchy, room types and lock targets, collecting all issues. It writes nothing unless there are none, and then replaces all data in one transaction. To add a column, add it to the spec and the model, then handle it in `_replace_all` and `export_rows`.
+
+The template (`GET /data/template`) is pre-filled with the yellow example rows from `app/data_io/examples.py`: a small institution that imports and solves as-is. `?blank=true` gives an empty template. Keep the examples valid when the spec changes; `test_template_example_rows_import_and_solve` checks this.
+
+## Authentication and roles
+
+Every API route except `/health` and `/api/v1/auth/{status,setup,login}` requires a signed-in user (`app/api/v1/auth.py`).
+
+| Role | Access |
+| --- | --- |
+| `ADMIN` | Everything, including user accounts (`/users`). |
+| `COORDINATOR` | Data, constraints, runs, exports. Not user accounts. |
+| `FACULTY` | Read-only: succeeded runs, filtered to their own sessions, and their own PDF. |
+
+- First start: the web UI asks for the first administrator (`POST /auth/setup`, refused once any user exists).
+- Faculty accounts link to a faculty member by **employee ID**, not database ID, so they survive re-importing the workbook. `POST /users/faculty-accounts` creates one per active faculty member (username = employee ID) and returns the generated passwords once.
+- The session is an HttpOnly, `SameSite=Lax` cookie holding an HMAC-signed token (`app/core/security.py`; passwords use scrypt). API clients can send the same token as `Authorization: Bearer`. Changing a password ends that user's other sessions.
+- Settings: `SECRET_KEY` (otherwise a key is generated into `data/.secret_key`), `SESSION_HOURS` (12), `COOKIE_SECURE` (set `true` behind HTTPS).
+- Locked out: `uv run python -m app.manage_users reset-password admin` (also `create` and `list`).
+- Tests: the `client` fixture is signed in as an admin by overriding `get_current_user`; `anon_client` uses real authentication.
+
+## Exports
+
+`app/export/layout.py` decides what goes where (entities, merged cells, faculty load); `excel_export.py` and `pdf_export.py` only render it.
+
+- Excel list sheets show day, clock time, subject, group, faculty, designation and room, with no internal session IDs. The CSV keeps `Session ID` because `stability_vs_previous` reads it back.
+- Grids merge multi-period sessions, colour each subject and end each row with that day's load. Group grids also show group blocked slots (when `hard.group_blocked_slots` is enabled) of every group whose students overlap, as the solver applies them: a section's block appears on its batches, and a batch's block appears on the section labelled with the batch code. Faculty and room grids show only global blocked slots. A **Faculty load** sheet (master and by-faculty workbooks) lists periods per day, the weekly total and the busiest day.
+- `GET /timetable/runs/{id}/pdf?by=group|faculty|room[&entity=KEY...][&download=true]` renders one A4 landscape page per entity from the stored run result. The web UI's **Print / PDF** button opens it.

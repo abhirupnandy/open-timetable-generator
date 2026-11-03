@@ -1,5 +1,7 @@
 import type {
   ConfigResponse,
+  CreatedAccount,
+  CurrentUser,
   DataSummary,
   ImportResult,
   JsonSchema,
@@ -10,6 +12,7 @@ import type {
 } from "./types";
 
 export const API_BASE = "/api/v1";
+export const UNAUTHORIZED_EVENT = "timetable:unauthorized";
 
 export class ApiError extends Error {
   constructor(
@@ -62,6 +65,11 @@ export async function request<T>(path: string, init: RequestOptions = {}): Promi
     );
   }
 
+  if (response.status === 401 && !path.startsWith("/auth/")) {
+    // Session expired or signed out elsewhere: the AuthProvider shows the sign-in page.
+    window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
+  }
+
   if (response.status === 204) return undefined as T;
 
   const type = response.headers.get("content-type") ?? "";
@@ -103,10 +111,36 @@ export const api = {
     request<RunSummary>("/timetable/runs", { method: "POST", body: { max_time_seconds: maxTimeSeconds } }),
   fileUrl: (runId: string, name: string) => `${API_BASE}/timetable/runs/${runId}/files/${name}`,
 
+  pdfUrl: (runId: string, by: string, entities: string[] = [], download = false) => {
+    const params = new URLSearchParams({ by });
+    entities.forEach((entity) => params.append("entity", entity));
+    if (download) params.set("download", "true");
+    return `${API_BASE}/timetable/runs/${runId}/pdf?${params}`;
+  },
+
+  authStatus: () => request<{ needs_setup: boolean }>("/auth/status"),
+  me: () => request<CurrentUser>("/auth/me"),
+  login: (username: string, password: string) =>
+    request<{ user: CurrentUser }>("/auth/login", { method: "POST", body: { username, password } }),
+  setup: (body: { username: string; full_name: string; password: string }) =>
+    request<{ user: CurrentUser }>("/auth/setup", { method: "POST", body }),
+  logout: () => request<void>("/auth/logout", { method: "POST" }),
+  changePassword: (current_password: string, new_password: string) =>
+    request<CurrentUser>("/auth/password", { method: "POST", body: { current_password, new_password } }),
+
+  users: () => request<CurrentUser[]>("/users"),
+  createUser: (body: Record<string, unknown>) => request<CurrentUser>("/users", { method: "POST", body }),
+  updateUser: (id: number, body: Record<string, unknown>) =>
+    request<CurrentUser>(`/users/${id}`, { method: "PATCH", body }),
+  deleteUser: (id: number) => request<void>(`/users/${id}`, { method: "DELETE" }),
+  createFacultyAccounts: () =>
+    request<{ created: CreatedAccount[] }>("/users/faculty-accounts", { method: "POST" }),
+
   dataSummary: () => request<DataSummary>("/data/summary"),
   importData: (file: Blob) => request<ImportResult>("/data/import", { method: "POST", raw: file }),
   clearData: () => request<Record<string, number>>("/data/clear", { method: "POST" }),
   templateUrl: `${API_BASE}/data/template`,
+  blankTemplateUrl: `${API_BASE}/data/template?blank=true`,
   sampleUrl: `${API_BASE}/data/sample`,
   exportUrl: `${API_BASE}/data/export`,
 };

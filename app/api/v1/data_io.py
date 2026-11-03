@@ -58,10 +58,12 @@ def _xlsx(data: bytes, filename: str) -> Response:
 
 
 @router.get("/template")
-def download_template() -> Response:
-    """Blank workbook with instructions, headers and dropdowns."""
+def download_template(blank: bool = False) -> Response:
+    """Template with instructions, headers, dropdowns and highlighted example
+    rows (a small institution that imports as-is). ``blank=true`` leaves out
+    the examples."""
 
-    return _xlsx(workbook_bytes(build_workbook()), "timetable_data_template.xlsx")
+    return _xlsx(workbook_bytes(build_workbook(examples=not blank)), "timetable_data_template.xlsx")
 
 
 @router.get("/sample")

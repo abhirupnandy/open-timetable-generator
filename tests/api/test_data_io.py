@@ -79,7 +79,7 @@ MINIMAL = {
 
 
 def test_template_has_instructions_headers_and_dropdowns(client):
-    response = client.get("/api/v1/data/template")
+    response = client.get("/api/v1/data/template?blank=true")
     assert response.status_code == 200
     assert "timetable_data_template.xlsx" in response.headers["content-disposition"]
 
@@ -96,6 +96,45 @@ def test_template_has_instructions_headers_and_dropdowns(client):
     assert any(
         "PROFESSOR" in str(rule.formula1) for rule in faculty.data_validations.dataValidation
     )
+
+
+def test_template_example_rows_import_and_solve(client, run_manager):
+    response = client.get("/api/v1/data/template")
+    workbook = load_workbook(BytesIO(response.content))
+    faculty = workbook["Faculty"]
+    assert faculty.max_row == 5 and faculty["D5"].value == "PHD_SCHOLAR"
+    assert faculty["A2"].fill.fgColor.rgb.endswith("FFF2CC")  # highlighted as example
+    assert "EXAMPLES" in str(workbook["Instructions"]["A3"].value)
+    instructions = [row for row in workbook["Instructions"].iter_rows(values_only=True)]
+    assert ("designation", "yes", "one of the listed values") == instructions[
+        next(i for i, row in enumerate(instructions) if row[0] == "designation")
+    ][:3]
+    for sheet in SHEETS:
+        assert workbook[sheet.name].max_row >= 2, f"{sheet.name} has no example"
+
+    result = _upload(client, response.content).json()
+    assert result["ok"], result["issues"]
+    assert result["counts"]["Assignments"] == 6
+
+    started = client.post("/api/v1/timetable/runs", json={"max_time_seconds": 5}).json()
+    run_manager.wait(started["id"])
+    detail = client.get(f"/api/v1/timetable/runs/{started['id']}").json()
+    assert detail["status"] == "succeeded", detail["error_detail"]
+    assert detail["result"]["calendar"]["group_blocked_slots"] == [
+        {"group_code": "CSE-Y1-A", "day": "WEDNESDAY", "period": 7, "label": "Sports"}
+    ]
+
+    # The section's block shows on its batches' grids (Wednesday row, P7 column).
+    from app.export.layout import calendar_from_payload
+
+    calendar = calendar_from_payload(detail["result"]["calendar"])
+    batch = calendar.for_entity("group", "CSE-Y1-A-B1", detail["result"]["group_parents"])
+    assert batch.blocked[("WEDNESDAY", 7)] == "Sports (CSE-Y1-A)"
+    grid = client.get(f"/api/v1/timetable/runs/{started['id']}/files/grid_by_group.xlsx")
+    sheet = load_workbook(BytesIO(grid.content))["CSE-Y1-A-B1"]
+    assert "Sports (CSE-Y1-A)" in [
+        cell for row in sheet.iter_rows(values_only=True) for cell in row
+    ]
 
 
 def test_sample_imports_and_export_round_trips(client):
