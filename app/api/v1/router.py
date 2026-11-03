@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from app.api.v1 import (
     assignments,
     courses,
+    data_io,
     faculty,
     groups,
     rooms,
@@ -24,3 +25,4 @@ api_router.include_router(scheduling_rules.unavailability_router)
 api_router.include_router(scheduling_rules.group_blocks_router)
 api_router.include_router(scheduling_rules.session_locks_router)
 api_router.include_router(timetable.router)
+api_router.include_router(data_io.router)

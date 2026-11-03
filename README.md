@@ -130,17 +130,49 @@ Then open:
 uv run pytest
 ```
 
-API tests use a separate temporary SQLite database. `tests/domain/test_db_input.py` and `tests/integration/` read the seeded development database (`data/open_timetable.db`); seed it first (see below). The seeded integration test solves with a 20-second limit.
+Tests never touch `data/open_timetable.db`. API tests use a temporary SQLite database, and tests that need realistic data import `samples/sample_data.xlsx` into a temporary database. The seeded integration test solves with a 20-second limit. Frontend tests: `cd frontend && npm test`.
 
-## Seed sample data
-
-After running the migration:
+## Getting started (full workflow)
 
 ```bash
-uv run python -m app.db.seed          # or: uv run python scripts/seed_sample_data.py
+uv sync
+uv run alembic upgrade head                        # create / update the database
+cd frontend && npm install && npm run build && cd ..
+uv run uvicorn app.main:app --reload               # from the repository root
 ```
 
-The seed creates one school with B.Tech, B.Sc, BCA, M.Tech, MCA and M.Sc AI programmes: 16 programme-year groups with two lab batches each (48 groups), 28 faculty, 16 rooms, 64 subjects and 80 teaching assignments (173 weekly sessions).
+Open http://127.0.0.1:8000/ and follow the checklist on the Overview page:
+
+1. **Import data.** Download the blank Excel template (or the filled-in example), fill in one sheet per kind of record and upload it. The whole workbook is validated before anything is written. Every problem is listed with its sheet, row and column, and nothing changes until the file is clean. A successful import replaces all scheduling data.
+2. **Review constraints.** Edit the calendar, solver limits and every hard, flexible and soft constraint on the Constraints page. Changes are saved to `config/timetable.toml` and validated (unknown keys, bad periods and negative weights are rejected with a message on the field).
+3. **Generate.** Start a run with a time limit and watch it move through loading, solving, validating and exporting.
+4. **View.** Browse the grids, print them, and download the CSV/Excel exports and the score report.
+
+Every record can be edited afterwards on the Edit data pages. "Current data" on the Import page exports the database in the template format, so you can edit it in Excel and re-import it.
+
+### Data workbook
+
+Sheets: Schools, Courses, Faculty, Rooms, Subjects, Groups, Assignments, plus optional Unavailability, GroupBlockedSlots and SessionLocks. Records refer to each other by code (school code, course code, group code, faculty employee ID, room code), never by database ID. The Instructions sheet documents every column, and enum and boolean columns have dropdowns. `samples/sample_data.xlsx` is a complete example: 16 programme-year groups with two lab batches each, 28 faculty, 16 rooms, 64 subjects and 80 assignments (173 weekly sessions).
+
+The same operations are available from the command line:
+
+```bash
+uv run python -m app.data_io template my_template.xlsx
+uv run python -m app.data_io import filled_in.xlsx
+uv run python -m app.data_io export current.xlsx
+```
+
+### Runs, failures and logs
+
+Every run is stored in the `timetable_runs` table with its status, stage, progress log and results, so history survives restarts. A failed run records a short reason and the full detail. Examples:
+
+- No data: "There are no active teaching assignments to schedule".
+- Pre-solve problems: each problem is listed, such as faculty over their weekly cap, groups or room types over capacity, empty candidate domains, or conflicting locks.
+- CP-SAT proved the problem infeasible: the enabled optional hard constraints are listed as candidates to relax.
+- Time limit reached without a solution.
+- Unexpected errors: the traceback is kept.
+
+The Run history page lists all runs and can filter to failures. Runs interrupted by a server restart are marked failed. Server-side logs go to the console and `output/logs/app.log`.
 
 ## Web UI
 
@@ -166,13 +198,17 @@ Other scripts: `npm test` (Vitest + Testing Library) and `npm run typecheck`. If
 
 Pages:
 
-- **Overview**: record counts, weekly demand and the latest run.
-- **Data**: list, filter, sort, add, edit and delete every resource, including unavailability, group blocked slots and session locks.
-- **Generate**: start a solve with a time limit, watch progress, then see the headline metrics, the score report (independent calculator vs solver) and download links for every export.
+- **Overview**: setup checklist (import, constraints, generate, view), data counts and the latest run.
+- **Import data**: template, example and current-data downloads, and upload with row-level validation errors.
+- **Edit data**: list, filter, sort, add, edit and delete every resource, including unavailability, group blocked slots and session locks.
+- **Generate**: start a solve with a time limit, watch its stages, then see the headline metrics, the score report (independent calculator vs solver) and download links for every export.
+- **Run history**: every run with status and failure reason. Filter to failures, inspect the error details and log, or delete a run.
 - **Timetable**: days x periods grid per group (including parent and batch sessions), faculty member or room, with lunch and blocked slots marked. The grid is print-friendly.
-- **Constraints**: read-only view of `config/timetable.toml`.
+- **Constraints**: edit `config/timetable.toml` (calendar, solver, optional hard, flexible and soft constraints). The form is generated from the config's JSON schema, and you can save, discard or reset to defaults.
 
-Solving runs in a background thread through `POST /api/v1/timetable/runs`, and the UI polls `GET /api/v1/timetable/runs/{id}`. Only one run can be active at a time. Runs are kept in memory, and their export files go to `output/runs/<id>/`.
+Solving runs in a background thread through `POST /api/v1/timetable/runs`, and the UI polls `GET /api/v1/timetable/runs/{id}`. Only one run can be active at a time. Runs are stored in the database, and their export files go to `output/runs/<id>/`.
+
+If a page stays on "Loading" or shows "returned text/html instead of JSON" in dev mode, the Vite dev server isn't proxying `/api`. Make sure FastAPI is running on :8000 and restart `npm run dev`.
 
 ## Generate a timetable
 
@@ -187,7 +223,7 @@ The run prints the configuration summary, solver status, objective, best bound, 
 - `grid_by_group.xlsx`, `grid_by_faculty.xlsx`, `grid_by_room.xlsx` (days x periods, printable)
 - `score_report.json`
 
-On the seeded data the model has about 40k candidates and 58k variables, builds in under a second and peaks at about 2 GB RSS with 8 workers.
+On the sample data the model has about 40k candidates and 58k variables, builds in under a second and peaks at about 2 GB RSS with 8 workers.
 
 If the problem is infeasible, the run stops with the pre-solve diagnostics and the list of enabled optional hard constraints that could be relaxed.
 
@@ -216,7 +252,9 @@ All CRUD endpoints are under `/api/v1`:
 - `/unavailability` (faculty/room unavailable period ranges; shared rooms record external bookings here)
 - `/group-blocked-slots` (e.g. Year 1 sports, applies to the group and its batches)
 - `/session-locks` (pin a session to a day/start period and optionally a room)
-- `/timetable/config`, `/timetable/runs`, `/timetable/runs/{id}`, `/timetable/runs/{id}/files/{name}` (solve runs; not CRUD)
+- `/data/template`, `/data/sample`, `/data/export`, `/data/import` (raw .xlsx body), `/data/summary`, `/data/clear`
+- `/timetable/config` (GET/PUT), `/timetable/config/schema`, `/timetable/config/reset`
+- `/timetable/runs` (`?status_filter=failed`), `/timetable/runs/{id}` (GET/DELETE), `/timetable/runs/{id}/files/{name}`
 
 Each CRUD resource provides GET list, POST create, GET by ID, PATCH by ID and DELETE by ID.
 

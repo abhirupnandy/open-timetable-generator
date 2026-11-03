@@ -2,7 +2,10 @@ from fastapi import FastAPI
 
 from app.api.router import router
 from app.core.config import settings
+from app.core.logging import configure_logging
 from app.frontend import mount_frontend
+
+configure_logging(settings.output_dir, settings.log_level)
 
 app = FastAPI(title=settings.app_name, version=settings.app_version, debug=settings.debug)
 app.include_router(router)

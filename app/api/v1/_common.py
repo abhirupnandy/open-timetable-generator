@@ -1,11 +1,12 @@
 from datetime import UTC, datetime
 from functools import lru_cache
 
-from fastapi import HTTPException
+from fastapi import Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.core.timetable_config import TimetableConfig, load_timetable_config
+from app.core.config import settings
+from app.core.timetable_config import ConfigStore, TimetableConfig
 
 
 def now_utc() -> datetime:
@@ -35,11 +36,17 @@ def commit_or_conflict(db: Session) -> None:
 
 
 @lru_cache
-def _cached_timetable_config() -> TimetableConfig:
-    return load_timetable_config()
+def _default_config_store() -> ConfigStore:
+    return ConfigStore(settings.timetable_config_path)
 
 
-def get_timetable_config() -> TimetableConfig:
-    """FastAPI dependency returning the timetable configuration."""
+def get_config_store() -> ConfigStore:
+    """FastAPI dependency for the editable config file (tests override it)."""
 
-    return _cached_timetable_config()
+    return _default_config_store()
+
+
+def get_timetable_config(store: ConfigStore = Depends(get_config_store)) -> TimetableConfig:
+    """FastAPI dependency returning the current timetable configuration."""
+
+    return store.load()

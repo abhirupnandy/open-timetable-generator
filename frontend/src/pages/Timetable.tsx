@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 import { Page } from "../components/Layout";
 import { ErrorBox, Loading } from "../components/States";
@@ -13,9 +13,11 @@ import { entityOptions, entriesFor, type GridView } from "../lib/timetable";
 const VIEWS: GridView[] = ["group", "faculty", "room"];
 
 export function Timetable() {
-  const runs = useQuery({ queryKey: ["runs"], queryFn: api.runs });
+  const runs = useQuery({ queryKey: ["runs"], queryFn: () => api.runs() });
   const config = useConfig();
-  const [selected, setSelected] = useStoredState("selectedRun", "");
+  const [stored, setSelected] = useStoredState("selectedRun", "");
+  const [params, setParams] = useSearchParams();
+  const selected = params.get("run") ?? stored;
 
   const succeeded = (runs.data ?? []).filter((run) => run.status === "succeeded");
   const runId = succeeded.find((run) => run.id === selected)?.id ?? succeeded[0]?.id;
@@ -53,7 +55,13 @@ export function Timetable() {
         <div className="toolbar">
           <label>
             Run
-            <select value={runId} onChange={(event) => setSelected(event.target.value)}>
+            <select
+              value={runId}
+              onChange={(event) => {
+                setSelected(event.target.value);
+                setParams({});
+              }}
+            >
               {succeeded.map((item) => (
                 <option key={item.id} value={item.id}>
                   {formatDateTime(item.started_at)} · {item.total_weighted_penalty}

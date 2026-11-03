@@ -1,4 +1,4 @@
-"""Seeded end-to-end solve (requires the seeded development database).
+"""Seeded end-to-end solve on a database imported from samples/sample_data.xlsx.
 
 Uses a shorter time limit than production; the timetable only needs to be
 feasible here. Build/solve time and peak memory are printed (run with -s).
@@ -13,7 +13,6 @@ from sqlalchemy import select
 
 from app.core.timetable_config import TimetableConfig, load_timetable_config
 from app.db.models import TeachingAssignment
-from app.db.session import SessionLocal
 from app.domain.db_input import build_timetable_input_from_db
 from app.domain.problem import SchedulingProblem
 from app.domain.timetable_view_builder import build_timetable_view_entries
@@ -40,10 +39,10 @@ def _config(all_optional_off: bool = False) -> TimetableConfig:
 
 
 @pytest.fixture(scope="module")
-def seeded():
+def seeded(seeded_session_factory):
     config = _config()
 
-    with SessionLocal() as db:
+    with seeded_session_factory() as db:
         assignments = tuple(
             db.scalars(
                 select(TeachingAssignment).where(TeachingAssignment.is_active.is_(True))
@@ -57,11 +56,11 @@ def seeded():
         f"\n[seeded] status={result.status} build={result.build_time_seconds:.2f}s "
         f"solve={result.wall_time_seconds:.2f}s peak_rss={peak_mb:.0f}MB {result.model_stats}"
     )
-    return assignments, timetable_input, result, config
+    return assignments, timetable_input, result, config, seeded_session_factory
 
 
 def test_seeded_database_produces_timetable(seeded) -> None:
-    assignments, timetable_input, result, _ = seeded
+    assignments, timetable_input, result, *_ = seeded
 
     assert len(assignments) == 80
     assert len(timetable_input.sessions) == 173
@@ -72,7 +71,7 @@ def test_seeded_database_produces_timetable(seeded) -> None:
 
 
 def test_seeded_timetable_is_valid_and_scores_match(seeded) -> None:
-    _, timetable_input, result, config = seeded
+    _, timetable_input, result, config, _ = seeded
 
     validation = validate_timetable(
         result.timetable,
@@ -87,9 +86,9 @@ def test_seeded_timetable_is_valid_and_scores_match(seeded) -> None:
 
 
 def test_seeded_timetable_builds_view_entries(seeded) -> None:
-    _, _, result, _ = seeded
+    _, _, result, _, factory = seeded
 
-    with SessionLocal() as db:
+    with factory() as db:
         entries = build_timetable_view_entries(db, result.timetable)
 
     assert len(entries) == 173
@@ -106,10 +105,12 @@ def test_seeded_timetable_builds_view_entries(seeded) -> None:
         assert entry.end_period >= entry.start_period
 
 
-def test_seeded_problem_is_feasible_with_all_optional_constraints_disabled() -> None:
+def test_seeded_problem_is_feasible_with_all_optional_constraints_disabled(
+    seeded_session_factory,
+) -> None:
     config = _config(all_optional_off=True)
 
-    with SessionLocal() as db:
+    with seeded_session_factory() as db:
         timetable_input = build_timetable_input_from_db(db, config)
 
     result = solve(SchedulingProblem(timetable_input=timetable_input), config)

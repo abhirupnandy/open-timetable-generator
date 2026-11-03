@@ -31,6 +31,7 @@ export const config: ConfigResponse = {
 export const runSummary: RunSummary = {
   id: "run1",
   status: "succeeded",
+  stage: "done",
   started_at: "2026-11-03T10:00:00+00:00",
   finished_at: "2026-11-03T10:00:20+00:00",
   elapsed_seconds: 20,
@@ -43,6 +44,8 @@ export const runSummary: RunSummary = {
 
 export const runDetail: RunDetail = {
   ...runSummary,
+  error_detail: null,
+  log: "2026-11-03 10:00:00 UTC Run requested\n2026-11-03 10:00:20 UTC Finished: succeeded\n",
   files: [{ name: "timetable_master.csv", label: "Master CSV" }],
   result: {
     score_report: {
@@ -78,5 +81,73 @@ export const runDetail: RunDetail = {
       { session_id: "a:2:s:1", day: "MONDAY", start_period: 2, end_period: 3, subject: "Lab", course_code: "C", group_code: "G1-B1", group_name: "Batch 1", faculty: "Dr B", room: "LAB-1" },
       { session_id: "a:3:s:1", day: "TUESDAY", start_period: 3, end_period: 4, subject: "Physics", course_code: "C", group_code: "G1-B2", group_name: "Batch 2", faculty: "Dr A", room: null },
     ],
+  },
+};
+
+export const failedRun: RunDetail = {
+  ...runDetail,
+  id: "run0",
+  status: "failed",
+  stage: "solving",
+  solver_status: null,
+  total_weighted_penalty: null,
+  error: "Pre-solve checks found 1 problem(s) that make the timetable impossible.",
+  error_detail: "[ERROR] FACULTY_OVER_CAP: faculty 3 (PHD_SCHOLAR) is assigned 10 h/week, weekly cap is 8",
+  log: "2026-11-03 09:00:00 UTC FAILED: Pre-solve checks found 1 problem(s)\n",
+  files: [],
+  result: null,
+};
+
+export const configSchema = {
+  type: "object",
+  properties: {
+    calendar: { $ref: "#/$defs/Calendar" },
+    solver: { $ref: "#/$defs/Solver" },
+    hard: { $ref: "#/$defs/Hard" },
+    constraints: { $ref: "#/$defs/Flexible" },
+    soft: { $ref: "#/$defs/Soft" },
+  },
+  $defs: {
+    Calendar: {
+      type: "object",
+      properties: {
+        days: { type: "array", items: { type: "string", enum: ["MONDAY", "TUESDAY", "WEDNESDAY"] } },
+        lunch_after_period: { anyOf: [{ type: "integer" }, { type: "null" }], default: 2 },
+        periods: { type: "array", items: { $ref: "#/$defs/Period" } },
+        blocked_slots: { type: "array", items: { $ref: "#/$defs/Blocked" } },
+      },
+    },
+    Period: {
+      type: "object",
+      properties: { number: { type: "integer", minimum: 1 }, start: { type: "string" }, end: { type: "string" } },
+    },
+    Blocked: {
+      type: "object",
+      properties: {
+        day: { type: "string", enum: ["MONDAY", "TUESDAY"] },
+        period: { type: "integer", minimum: 1 },
+        label: { type: "string", default: "" },
+      },
+    },
+    Solver: {
+      type: "object",
+      properties: { max_time_seconds: { type: "number" }, workers: { type: "integer" }, log_progress: { type: "boolean" } },
+    },
+    Hard: {
+      type: "object",
+      properties: { faculty_daily_span: { $ref: "#/$defs/Span" } },
+    },
+    Span: { type: "object", properties: { enabled: { type: "boolean" }, max_minutes: { type: "integer" } } },
+    Mode: { type: "string", enum: ["off", "soft", "hard"] },
+    Flexible: {
+      type: "object",
+      properties: { no_session_across_lunch: { $ref: "#/$defs/Flex" } },
+    },
+    Flex: { type: "object", properties: { mode: { $ref: "#/$defs/Mode" }, weight: { type: "integer", minimum: 0 } } },
+    Soft: {
+      type: "object",
+      properties: { student_gaps: { $ref: "#/$defs/SoftItem" }, faculty_compact_days: { $ref: "#/$defs/SoftItem" } },
+    },
+    SoftItem: { type: "object", properties: { enabled: { type: "boolean" }, weight: { type: "integer", minimum: 0 } } },
   },
 };
