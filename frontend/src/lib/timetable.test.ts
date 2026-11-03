@@ -25,8 +25,21 @@ describe("entriesFor", () => {
 
   it("lists entity options", () => {
     const options = entityOptions(entries, parents);
-    expect(options.group).toEqual(["G1", "G1-B1", "G1-B2"]);
-    expect(options.room).toEqual(["LAB-1", "LH-1"]);
+    expect(options.group.map((option) => option.value)).toEqual(["G1", "G1-B1", "G1-B2"]);
+    expect(options.group[1].label).toBe("G1-B1 · Batch 1");
+    expect(options.room.map((option) => option.value)).toEqual(["LAB-1", "LH-1"]);
+  });
+
+  it("keys faculty by employee ID and labels them with designation", () => {
+    const sameName = [
+      { ...entries[0], faculty: "A Rao", faculty_code: "F1", faculty_designation: "PROFESSOR" },
+      { ...entries[1], faculty: "A Rao", faculty_code: "P9", faculty_designation: "PHD_SCHOLAR" },
+    ];
+    expect(entityOptions(sameName, parents).faculty).toEqual([
+      { value: "P9", label: "A Rao (PhD Scholar) · P9" },
+      { value: "F1", label: "A Rao (Prof.) · F1" },
+    ]);
+    expect(entriesFor(sameName, "faculty", "P9", parents).map((entry) => entry.session_id)).toEqual(["a:2:s:1"]);
   });
 });
 

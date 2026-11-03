@@ -12,6 +12,7 @@ dependencies = [
     "ortools>=9.15.6755",
     "pydantic>=2.0,<3.0",
     "pydantic-settings>=2.0,<3.0",
+    "reportlab>=4.2,<5",
     "sqlalchemy>=2.0,<3.0",
     "uvicorn[standard]>=0.35,<1.0",
 ]

@@ -1,16 +1,16 @@
 import { humanize, hue } from "../lib/format";
-import { dayCells, type GridView } from "../lib/timetable";
+import { dayCells, entryFacultyLabel, type GridView } from "../lib/timetable";
 import type { BlockedSlot, CalendarInfo, TimetableEntry } from "../lib/types";
 
 function SessionCard({ entry, view }: { entry: TimetableEntry; view: GridView }) {
   const meta = [
     view !== "group" ? entry.group_code : null,
-    view !== "faculty" ? entry.faculty : null,
+    view !== "faculty" ? entryFacultyLabel(entry) : null,
     view !== "room" ? entry.room ?? "Online" : null,
   ].filter(Boolean);
 
   return (
-    <div className="session" style={{ "--hue": hue(entry.subject) } as React.CSSProperties} title={entry.session_id}>
+    <div className="session" style={{ "--hue": hue(entry.subject) } as React.CSSProperties} title={`${entry.subject} · ${entry.group_code} · ${entryFacultyLabel(entry)} · ${entry.room ?? "Online"}`}>
       <div className="s-title">{entry.subject}</div>
       <div className="s-meta">{meta.join(" · ")}</div>
     </div>

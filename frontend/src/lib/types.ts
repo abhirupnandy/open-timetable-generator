@@ -52,6 +52,10 @@ export interface TimetableEntry {
   group_code: string;
   group_name: string;
   faculty: string;
+  /** Employee ID; missing in runs made before designations were recorded. */
+  faculty_code?: string;
+  faculty_designation?: string;
+  course_name?: string;
   room: string | null;
 }
 
@@ -59,9 +63,12 @@ export interface CalendarInfo {
   days: string[];
   periods: { number: number; start: string | null; end: string | null }[];
   lunch_after_period: number | null;
+  blocked_slots?: BlockedSlot[];
 }
 
 export interface RunResult {
+  /** "faculty" when the server returned only the signed-in faculty member's sessions. */
+  scope?: "faculty";
   score_report: ScoreReport;
   validation: {
     is_valid: boolean;
@@ -137,4 +144,24 @@ export interface JsonSchema {
   anyOf?: JsonSchema[];
   $ref?: string;
   $defs?: Record<string, JsonSchema>;
+}
+
+export type Role = "ADMIN" | "COORDINATOR" | "FACULTY";
+
+export interface CurrentUser {
+  id: number;
+  username: string;
+  full_name: string;
+  role: Role;
+  faculty_employee_id: string | null;
+  faculty: { employee_id: string; name: string; designation: string; designation_label: string } | null;
+  is_active: boolean;
+  last_login_at: string | null;
+}
+
+export interface CreatedAccount {
+  username: string;
+  full_name: string;
+  email: string;
+  password: string;
 }

@@ -19,18 +19,19 @@ import uuid
 from datetime import UTC, datetime
 from functools import lru_cache
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, Body, Depends, HTTPException, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Response, status
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field, ValidationError
 from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.api.v1._common import get_config_store, get_timetable_config
+from app.api.v1.auth import get_current_user, is_staff, require_staff
 from app.core.config import settings
 from app.core.timetable_config import ConfigStore, TimetableConfig
-from app.db.models import TimetableRun
+from app.db.models import Faculty, TimetableRun, User
 from app.db.session import get_session_factory
 from app.domain.db_input import build_timetable_input_from_db
 from app.domain.db_render_data import load_render_metadata
@@ -41,12 +42,9 @@ from app.domain.timetable import TimetableInput
 from app.domain.timetable_view_builder import view_entries_from_metadata
 from app.domain.validator import validate_timetable
 from app.export.csv_export import export_timetable_csv
-from app.export.excel_export import (
-    export_day_workbook,
-    export_faculty_workbook,
-    export_grid_workbook,
-    export_master_workbook,
-)
+from app.export.excel_export import export_all
+from app.export.layout import calendar_from_input, calendar_from_payload, entries_from_payload
+from app.export.pdf_export import timetable_pdf
 from app.optimisation.score_report import (
     build_score_report,
     headline_metrics,
@@ -339,7 +337,7 @@ class RunManager:
         data = _result_payload(result, timetable_input, config, metadata)
 
         self._stage(run_id, "exporting", "Writing CSV / Excel / JSON exports")
-        files = _write_exports(data, result, timetable_input, metadata, self.files_dir(run_id))
+        files = _write_exports(data, config, timetable_input, self.files_dir(run_id))
         data.pop("_payload", None)
         return data, files, result
 
@@ -404,6 +402,10 @@ def _result_payload(
                 for number in range(1, periods + 1)
             ],
             "lunch_after_period": timetable_input.lunch_after_period,
+            "blocked_slots": [
+                {"day": str(slot.day), "period": slot.period, "label": slot.label}
+                for slot in config.calendar.blocked_slots
+            ],
         },
         "group_parents": _group_parents(timetable_input, metadata),
         "entries": [
@@ -414,9 +416,12 @@ def _result_payload(
                 "end_period": entry.end_period,
                 "subject": entry.subject_name,
                 "course_code": entry.course_code,
+                "course_name": entry.course_name,
                 "group_code": entry.academic_group_code,
                 "group_name": entry.academic_group_name,
                 "faculty": entry.faculty_name,
+                "faculty_code": entry.faculty_code,
+                "faculty_designation": entry.faculty_designation,
                 "room": entry.room_name,
             }
             for entry in entries
@@ -424,28 +429,19 @@ def _result_payload(
     }
 
 
-def _write_exports(data, result, timetable_input, metadata, output_dir: Path) -> list[str]:
+def _write_exports(data, config, timetable_input, output_dir: Path) -> list[str]:
     payload, entries = data["_payload"]
-    days = [day.value for day in timetable_input.days]
-    group_parents = data["group_parents"]
 
     output_dir.mkdir(parents=True, exist_ok=True)
     write_score_report(payload, output_dir / "score_report.json")
     export_timetable_csv(entries, output_dir / "timetable_master.csv")
-    export_master_workbook(
-        entries, output_dir / "timetable_master.xlsx", summary_rows=summary_sheet_rows(payload)
+    export_all(
+        entries,
+        output_dir,
+        calendar=calendar_from_input(timetable_input, config.calendar.blocked_slots),
+        group_parents=data["group_parents"],
+        summary_rows=summary_sheet_rows(payload),
     )
-    export_day_workbook(entries, output_dir / "timetable_by_day.xlsx")
-    export_faculty_workbook(entries, output_dir / "timetable_by_faculty.xlsx")
-    for by in ("group", "faculty", "room"):
-        export_grid_workbook(
-            entries,
-            output_dir / f"grid_by_{by}.xlsx",
-            by=by,
-            days=days,
-            periods_per_day=timetable_input.periods_per_day,
-            group_parents=group_parents,
-        )
     return [name for name in EXPORT_FILES if (output_dir / name).exists()]
 
 
@@ -473,19 +469,22 @@ def _config_payload(config: TimetableConfig) -> dict:
     }
 
 
-@router.get("/config")
+STAFF = [Depends(require_staff)]
+
+
+@router.get("/config", dependencies=STAFF)
 def get_config(config: TimetableConfig = Depends(get_timetable_config)) -> dict:
     return _config_payload(config)
 
 
-@router.get("/config/schema")
+@router.get("/config/schema", dependencies=STAFF)
 def get_config_schema() -> dict:
     """JSON schema of the config; drives the editor in the web UI."""
 
     return TimetableConfig.model_json_schema()
 
 
-@router.put("/config")
+@router.put("/config", dependencies=STAFF)
 def update_config(
     payload: Annotated[dict, Body()],
     store: ConfigStore = Depends(get_config_store),
@@ -505,7 +504,7 @@ def update_config(
     return _config_payload(saved)
 
 
-@router.post("/config/reset")
+@router.post("/config/reset", dependencies=STAFF)
 def reset_config(store: ConfigStore = Depends(get_config_store)) -> dict:
     logger.info("Timetable configuration reset to defaults (%s)", store.path)
     return _config_payload(store.reset())
@@ -513,6 +512,9 @@ def reset_config(store: ConfigStore = Depends(get_config_store)) -> dict:
 
 # ---------------------------------------------------------------------------
 # Run routes
+#
+# Staff see and manage every run. Faculty see succeeded runs only, and
+# within them only their own sessions (no logs, scores or export files).
 # ---------------------------------------------------------------------------
 
 
@@ -520,20 +522,73 @@ def _session(manager: RunManager) -> Session:
     return manager.session_factory()
 
 
+def _get_run_or_404(db: Session, run_id: str) -> TimetableRun:
+    run = db.get(TimetableRun, run_id)
+    if run is None:
+        raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
+    return run
+
+
+def _own_faculty(db: Session, user: User) -> Faculty:
+    member = None
+    if user.faculty_employee_id:
+        member = db.scalar(select(Faculty).where(Faculty.employee_id == user.faculty_employee_id))
+    if member is None:
+        raise HTTPException(
+            status_code=403,
+            detail="Your account is not linked to a faculty member; ask an administrator",
+        )
+    return member
+
+
+def _own_rows(result: dict, member: Faculty) -> list[dict]:
+    """Entries of one faculty member (older runs lack employee IDs: match by name)."""
+
+    return [
+        row
+        for row in result.get("entries", [])
+        if row.get("faculty_code") == member.employee_id
+        or (not row.get("faculty_code") and row.get("faculty") == member.name)
+    ]
+
+
+def _faculty_detail(run: TimetableRun, member: Faculty) -> dict:
+    result = json.loads(run.result_json) if run.result_json else {}
+    summary = {**run_summary(run), "error": None}
+    return {
+        **summary,
+        "error_detail": None,
+        "log": "",
+        "files": [],
+        "result": {
+            "scope": "faculty",
+            "calendar": result.get("calendar", {}),
+            "group_parents": {},
+            "entries": _own_rows(result, member),
+        },
+    }
+
+
 @router.get("/runs")
 def list_runs(
     status_filter: str | None = None,
     limit: int = 100,
     manager: RunManager = Depends(get_run_manager),
+    user: User = Depends(get_current_user),
 ) -> list[dict]:
     with _session(manager) as db:
         stmt = select(TimetableRun).order_by(TimetableRun.started_at.desc()).limit(limit)
-        if status_filter:
+        if not is_staff(user):
+            stmt = stmt.where(TimetableRun.status == "succeeded")
+        elif status_filter:
             stmt = stmt.where(TimetableRun.status == status_filter)
-        return [run_summary(run) for run in db.scalars(stmt).all()]
+        runs = [run_summary(run) for run in db.scalars(stmt).all()]
+    if not is_staff(user):
+        runs = [{**run, "error": None} for run in runs]
+    return runs
 
 
-@router.post("/runs", status_code=status.HTTP_202_ACCEPTED)
+@router.post("/runs", status_code=status.HTTP_202_ACCEPTED, dependencies=STAFF)
 def start_run(
     payload: RunRequest | None = None,
     config: TimetableConfig = Depends(get_timetable_config),
@@ -551,20 +606,24 @@ def start_run(
 
 
 @router.get("/runs/{run_id}")
-def get_run(run_id: str, manager: RunManager = Depends(get_run_manager)) -> dict:
+def get_run(
+    run_id: str,
+    manager: RunManager = Depends(get_run_manager),
+    user: User = Depends(get_current_user),
+) -> dict:
     with _session(manager) as db:
-        run = db.get(TimetableRun, run_id)
-        if run is None:
+        run = _get_run_or_404(db, run_id)
+        if is_staff(user):
+            return run_detail(run)
+        if run.status != "succeeded":
             raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
-        return run_detail(run)
+        return _faculty_detail(run, _own_faculty(db, user))
 
 
-@router.delete("/runs/{run_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/runs/{run_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=STAFF)
 def delete_run(run_id: str, manager: RunManager = Depends(get_run_manager)) -> None:
     with _session(manager) as db:
-        run = db.get(TimetableRun, run_id)
-        if run is None:
-            raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
+        run = _get_run_or_404(db, run_id)
         if run.status == "running":
             raise HTTPException(status_code=409, detail="A running run cannot be deleted")
         db.delete(run)
@@ -577,7 +636,7 @@ def delete_run(run_id: str, manager: RunManager = Depends(get_run_manager)) -> N
         directory.rmdir()
 
 
-@router.get("/runs/{run_id}/files/{name}")
+@router.get("/runs/{run_id}/files/{name}", dependencies=STAFF)
 def download_run_file(
     run_id: str,
     name: str,
@@ -590,3 +649,58 @@ def download_run_file(
     if name not in files or not path.exists():
         raise HTTPException(status_code=404, detail="File not found")
     return FileResponse(path, filename=name)
+
+
+def _filename_part(text: str) -> str:
+    cleaned = "".join(ch if ch.isalnum() or ch in "-_" else "_" for ch in text)
+    return cleaned.strip("_")[:60] or "all"
+
+
+@router.get("/runs/{run_id}/pdf")
+def run_pdf(
+    run_id: str,
+    by: Literal["group", "faculty", "room"] = "group",
+    entity: Annotated[list[str] | None, Query()] = None,
+    download: bool = False,
+    manager: RunManager = Depends(get_run_manager),
+    user: User = Depends(get_current_user),
+) -> Response:
+    """Printable PDF: one A4 landscape page per group, faculty member or room.
+
+    ``entity`` (repeatable) limits it to those keys: group codes, faculty
+    employee IDs or room codes. Without it every entity of the view is
+    included. Faculty users can only print their own timetable.
+    """
+
+    with _session(manager) as db:
+        run = _get_run_or_404(db, run_id)
+        if run.status != "succeeded" or not run.result_json:
+            raise HTTPException(status_code=409, detail="Only succeeded runs can be printed")
+        result = json.loads(run.result_json)
+        rows = result.get("entries", [])
+
+        if not is_staff(user):
+            member = _own_faculty(db, user)
+            rows = _own_rows(result, member)
+            own = {member.employee_id, member.name}
+            if by != "faculty" or (entity and not set(entity) <= own):
+                raise HTTPException(status_code=403, detail="You can only print your own timetable")
+            entity = None
+
+    entries = entries_from_payload(rows)
+    calendar = calendar_from_payload(result.get("calendar", {}))
+    pdf = timetable_pdf(
+        entries,
+        calendar,
+        by=by,
+        keys=entity,
+        group_parents=result.get("group_parents") or {},
+        footer=f"Run {run.id} · generated {run.started_at:%d %b %Y %H:%M} UTC",
+    )
+    name = f"timetable_{by}_{_filename_part('-'.join(entity) if entity else 'all')}_{run.id}.pdf"
+    disposition = "attachment" if download else "inline"
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'{disposition}; filename="{name}"'},
+    )

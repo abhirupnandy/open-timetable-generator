@@ -13,6 +13,7 @@ from app.db.models.school import School
 from app.db.models.subject import Subject, SubjectType
 from app.db.models.teaching_assignment import AssignmentMode, TeachingAssignment
 from app.db.models.timetable_run import TimetableRun
+from app.db.models.user import User, UserRole
 
 __all__ = [
     "AcademicGroup",
@@ -33,4 +34,6 @@ __all__ = [
     "Weekday",
     "TeachingAssignment",
     "TimetableRun",
+    "User",
+    "UserRole",
 ]

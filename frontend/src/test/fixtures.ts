@@ -1,4 +1,4 @@
-import type { ConfigResponse, RunDetail, RunSummary } from "../lib/types";
+import type { ConfigResponse, CurrentUser, RunDetail, RunSummary } from "../lib/types";
 
 export const schools = [{ id: 1, code: "SCI", name: "Science", is_active: true }];
 export const rooms = [
@@ -150,4 +150,26 @@ export const configSchema = {
     },
     SoftItem: { type: "object", properties: { enabled: { type: "boolean" }, weight: { type: "integer", minimum: 0 } } },
   },
+};
+
+export const adminUser: CurrentUser = {
+  id: 1,
+  username: "admin",
+  full_name: "Admin User",
+  role: "ADMIN",
+  faculty_employee_id: null,
+  faculty: null,
+  is_active: true,
+  last_login_at: null,
+};
+
+export const facultyUser: CurrentUser = {
+  id: 7,
+  username: "F2",
+  full_name: "Ravi Kumar",
+  role: "FACULTY",
+  faculty_employee_id: "F2",
+  faculty: { employee_id: "F2", name: "Ravi Kumar", designation: "PHD_SCHOLAR", designation_label: "PhD Scholar" },
+  is_active: true,
+  last_login_at: null,
 };

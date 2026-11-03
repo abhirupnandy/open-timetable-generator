@@ -14,8 +14,13 @@ def load_render_metadata(
     dict[int, str],
     dict[int, str],
     dict[int, tuple[str, str]],
+    dict[int, tuple[str, str]],
 ]:
-    """Load human-readable metadata for timetable rendering."""
+    """Load human-readable metadata for timetable rendering.
+
+    Returns subject names, group (code, name), faculty names, room codes,
+    course (code, name) and faculty (employee ID, designation), keyed by ID.
+    """
 
     subjects = tuple(
         db.scalars(
@@ -72,6 +77,11 @@ def load_render_metadata(
         for member in faculty
     }
 
+    faculty_details = {
+        member.id: (member.employee_id, member.designation.value)
+        for member in faculty
+    }
+
     room_names = {
         room.id: room.code
         for room in rooms
@@ -88,4 +98,5 @@ def load_render_metadata(
         faculty_names,
         room_names,
         course_metadata,
+        faculty_details,
     )

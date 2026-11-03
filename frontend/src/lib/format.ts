@@ -16,3 +16,22 @@ export function hue(text: string): number {
 export function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString();
 }
+
+const DESIGNATIONS: Record<string, string> = {
+  PROFESSOR: "Prof.",
+  ASSOCIATE_PROFESSOR: "Assoc. Prof.",
+  ASSISTANT_PROFESSOR: "Asst. Prof.",
+  PHD_SCHOLAR: "PhD Scholar",
+};
+
+/** "ASSISTANT_PROFESSOR" -> "Asst. Prof." */
+export function designationLabel(designation: string | undefined | null): string {
+  if (!designation) return "";
+  return DESIGNATIONS[designation] ?? humanize(designation);
+}
+
+/** "Dr A (Asst. Prof.)", or just the name when the designation is unknown. */
+export function facultyLabel(name: string, designation?: string | null): string {
+  const label = designationLabel(designation);
+  return label ? `${name} (${label})` : name;
+}

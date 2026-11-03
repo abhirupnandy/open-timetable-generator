@@ -13,6 +13,7 @@ from openpyxl.worksheet.datavalidation import DataValidation
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.data_io.examples import EXAMPLE_NOTE, EXAMPLE_ROWS
 from app.data_io.spec import INSTRUCTIONS_SHEET, SHEETS, Column, Sheet
 from app.db.models import (
     AcademicGroup,
@@ -31,6 +32,7 @@ from app.db.models import (
 REQUIRED_FILL = PatternFill(fill_type="solid", fgColor="1F4E78")
 OPTIONAL_FILL = PatternFill(fill_type="solid", fgColor="5B7FA6")
 HEADER_FONT = Font(bold=True, color="FFFFFF")
+EXAMPLE_FILL = PatternFill(fill_type="solid", fgColor="FFF2CC")
 VALIDATION_ROWS = 2000
 
 Rows = Mapping[str, Sequence[Mapping[str, object]]]
@@ -48,11 +50,22 @@ def _kind_label(column: Column) -> str:
     return "text"
 
 
-def _write_instructions(workbook: Workbook) -> None:
+def _example_value(spec: Sheet, column: Column) -> str:
+    for row in EXAMPLE_ROWS.get(spec.name, ()):
+        value = row.get(column.name)
+        if value is not None:
+            if isinstance(value, bool):
+                return "TRUE" if value else "FALSE"
+            return str(value)
+    return ""
+
+
+def _write_instructions(workbook: Workbook, examples: bool) -> None:
     sheet = workbook.create_sheet(INSTRUCTIONS_SHEET)
     lines = [
         ("Open Timetable Generator: data workbook", True),
         ("", False),
+        *([(EXAMPLE_NOTE, False), ("", False)] if examples else []),
         ("1. Fill in one row per record on each sheet. Do not rename sheets or headers.", False),
         ("2. Dark blue headers are required columns; lighter headers are optional.", False),
         (
@@ -77,7 +90,7 @@ def _write_instructions(workbook: Workbook) -> None:
         sheet.append([])
         sheet.append([spec.name, spec.description])
         sheet.cell(sheet.max_row, 1).font = Font(bold=True, size=12)
-        sheet.append(["Column", "Required", "Type", "Allowed values", "Notes"])
+        sheet.append(["Column", "Required", "Type", "Allowed values", "Notes", "Example"])
         for cell in sheet[sheet.max_row]:
             cell.font = Font(bold=True)
         for column in spec.columns:
@@ -88,14 +101,25 @@ def _write_instructions(workbook: Workbook) -> None:
                     _kind_label(column),
                     ", ".join(column.choices) if column.choices else "",
                     column.description,
+                    _example_value(spec, column),
                 ]
             )
 
-    for letter, width in {"A": 26, "B": 18, "C": 24, "D": 60, "E": 70}.items():
+    if examples:
+        sheet.cell(3, 1).font = Font(bold=True, color="9C5700")
+        sheet.cell(3, 1).fill = EXAMPLE_FILL
+
+    for letter, width in {"A": 26, "B": 18, "C": 24, "D": 60, "E": 70, "F": 30}.items():
         sheet.column_dimensions[letter].width = width
 
 
-def _write_sheet(workbook: Workbook, spec: Sheet, rows: Sequence[Mapping[str, object]]) -> None:
+def _write_sheet(
+    workbook: Workbook,
+    spec: Sheet,
+    rows: Sequence[Mapping[str, object]],
+    *,
+    highlight: bool = False,
+) -> None:
     sheet = workbook.create_sheet(spec.name)
     sheet.append([column.name for column in spec.columns])
 
@@ -149,18 +173,31 @@ def _write_sheet(workbook: Workbook, spec: Sheet, rows: Sequence[Mapping[str, ob
                 value = "TRUE" if value else "FALSE"
             values.append(value)
         sheet.append(values)
+        if highlight:
+            for cell in sheet[sheet.max_row]:
+                cell.fill = EXAMPLE_FILL
+
+    if highlight and rows:
+        sheet.cell(1, 1).comment = Comment(EXAMPLE_NOTE, "Timetable Generator")
 
     sheet.freeze_panes = "A2"
 
 
-def build_workbook(rows: Rows | None = None) -> Workbook:
-    """Build a data workbook; without ``rows`` it is the blank template."""
+def build_workbook(rows: Rows | None = None, *, examples: bool = False) -> Workbook:
+    """Build a data workbook from ``rows`` (an export of current data).
 
+    With ``examples`` (and no rows) it is the template, pre-filled with
+    highlighted example rows; with neither it is completely blank.
+    """
+
+    highlight = examples and rows is None
+    if highlight:
+        rows = EXAMPLE_ROWS
     workbook = Workbook()
     workbook.remove(workbook.active)
-    _write_instructions(workbook)
+    _write_instructions(workbook, highlight)
     for spec in SHEETS:
-        _write_sheet(workbook, spec, (rows or {}).get(spec.name, ()))
+        _write_sheet(workbook, spec, (rows or {}).get(spec.name, ()), highlight=highlight)
     workbook.active = 0
     return workbook
 

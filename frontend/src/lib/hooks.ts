@@ -28,8 +28,8 @@ export function useRefs(keys: ResourceKey[]): { refs: RefData; isLoading: boolea
   };
 }
 
-export function useConfig() {
-  return useQuery({ queryKey: ["config"], queryFn: api.config, staleTime: 60_000 });
+export function useConfig(enabled = true) {
+  return useQuery({ queryKey: ["config"], queryFn: api.config, staleTime: 60_000, enabled });
 }
 
 /** ``useState`` persisted to localStorage (ignored when storage is unavailable). */
